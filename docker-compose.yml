@@ -21,7 +21,7 @@ services:
     env_file:
       - .env.docker
     ports:
-      - "5000:5000"
+      - "5002:5002"
     volumes:
       - ./uploads:/usr/src/app/uploads
     depends_on:
