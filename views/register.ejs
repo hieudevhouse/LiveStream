@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
@@ -35,16 +35,17 @@
     .stat-card { background: white; border-radius: 24px; padding: 24px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.06); }
     .stat-value { font-size: 2rem; font-weight: 800; color: #2563eb; margin: 0; }
     .stat-label { margin: 8px 0 0; color: #475569; font-size: 0.95rem; }
-    .content-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 30px; }
-    .sidebar { background: white; border-radius: 28px; padding: 28px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.05); border: 1px solid #e2e8f0; }
-    .sidebar h2 { margin-top: 0; font-size: 1.1rem; color: #0f172a; }
-    .steps { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 14px; }
-    .steps li { border-radius: 20px; padding: 16px 18px; display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; border: 1px solid transparent; transition: border-color 0.2s ease, background 0.2s ease; }
-    .steps li.active { border-color: #2563eb; background: #eff6ff; }
-    .steps li span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 999px; background: #e2e8f0; color: #0f172a; font-weight: 700; }
-    .steps li.active span { background: #2563eb; color: white; }
-    .steps li h3 { margin: 0; font-size: 0.98rem; }
-    .steps li p { margin: 6px 0 0; color: #64748b; font-size: 0.92rem; line-height: 1.5; }
+    .content-grid { display: flex; flex-direction: column; gap: 30px; max-width: 1000px; margin: 0 auto; }
+    .sidebar { background: white; border-radius: 28px; padding: 32px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.05); border: 1px solid #e2e8f0; text-align: center; }
+    .sidebar h2 { margin-top: 0; font-size: 1.5rem; color: #0f172a; }
+    .section-intro-center { color: #475569; line-height: 1.75; max-width: 600px; margin: 12px auto 0; font-size: 1rem; }
+    .steps { list-style: none; padding: 0; margin: 32px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: left; }
+    .steps li { border-radius: 20px; padding: 20px; display: flex; align-items: flex-start; gap: 16px; border: 1px solid #e2e8f0; transition: all 0.3s ease; background: #f8fafc; }
+    .steps li.active { border-color: #2563eb; background: #eff6ff; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
+    .steps li span { flex-shrink: 0; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 999px; background: white; border: 1px solid #cbd5e1; color: #475569; font-weight: 700; font-size: 1.1rem; transition: all 0.3s ease; }
+    .steps li.active span { background: #2563eb; border-color: #2563eb; color: white; }
+    .steps li h3 { margin: 0; font-size: 1.05rem; font-weight: 700; color: #0f172a; }
+    .steps li p { margin: 8px 0 0; color: #64748b; font-size: 0.92rem; line-height: 1.5; }
     .form-panel { background: white; border-radius: 28px; padding: 32px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.05); }
     .form-section { display: none; }
     .form-section.active { display: block; }
@@ -95,7 +96,7 @@
     .popup-card .btn { width: 100%; }
     .popup-close { position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; border: none; background: transparent; color: #64748b; font-size: 1.2rem; cursor: pointer; }
     .hidden { display: none !important; }
-    @media (max-width: 1024px) { .hero { grid-template-columns: 1fr; } .content-grid { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } .summary-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 1024px) { .hero { grid-template-columns: 1fr; } .content-grid { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } .summary-grid { grid-template-columns: 1fr; } .steps { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -141,7 +142,7 @@
     <div class="content-grid" id="register">
       <aside class="sidebar">
         <h2>Hướng dẫn đăng ký</h2>
-        <p class="section-intro">Hoàn thành 3 bước sau để đăng ký nhãn hàng và sản phẩm với Dreamax. Dữ liệu sẽ được lưu và xử lý ngay tức thì.</p>
+        <p class="section-intro-center">Hoàn thành 3 bước sau để đăng ký nhãn hàng và sản phẩm với Dreamax. Dữ liệu sẽ được lưu và xử lý ngay tức thì.</p>
         <ul class="steps" id="sidebarSteps">
           <li class="active" data-step="1"><span>1</span><div><h3>Thông tin nhãn hàng</h3><p>Nhập tên, kiểu hình sở hữu, liên hệ.</p></div></li>
           <li data-step="2"><span>2</span><div><h3>Sản phẩm</h3><p>Thêm các sản phẩm của nhãn hàng.</p></div></li>
@@ -302,7 +303,14 @@
           <div class="grid-2">
             <div class="field">
               <label for="businessField_${index}">Danh mục sản phẩm</label>
-              <input id="businessField_${index}" name="productServices[${index}][businessField]" type="text" placeholder="Ví dụ: Thời trang, Điện tử, Thực phẩm..." required />
+              <select id="businessField_${index}" name="productServices[${index}][businessField]" required>
+                <option value="">-- Chọn danh mục --</option>
+                <option value="Trái cây">Trái cây</option>
+                <option value="Nông sản">Nông sản</option>
+                <option value="Thực phẩm bổ sung">Thực phẩm bổ sung</option>
+                <option value="Thực phẩm tươi sống">Thực phẩm tươi sống</option>
+                <option value="Đồ ăn liền">Đồ ăn liền</option>
+              </select>
             </div>
             <div class="field">
               <label for="baseCost_${index}">Giá sản phẩm (VND)</label>
@@ -413,7 +421,7 @@
       for (let i = 0; i < productCards.length; i++) {
         const card = productCards[i];
         const productName = card.querySelector('input[name^="productServices"][name$="[productName]"]').value.trim();
-        const businessField = card.querySelector('input[name^="productServices"][name$="[businessField]"]').value.trim();
+        const businessField = card.querySelector('select[name^="productServices"][name$="[businessField]"]').value.trim();
         const baseCost = card.querySelector('input[name^="productServices"][name$="[baseCost]"]').value.trim();
         const generalDescription = card.querySelector('textarea[name^="productServices"][name$="[generalDescription]"]').value.trim();
 
