@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Vector AI Search</title>
+
+  <style>
+
+  body {
+    font-family: Arial;
+    padding: 40px;
+    background-color: #f5f5f5;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .search-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+  }
+
+  .search-box input {
+    flex: 1;
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+  }
+
+  .search-box button {
+    padding: 12px 30px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .search-box button:hover {
+    background-color: #0056b3;
+  }
+
+  .error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+  }
+
+  .success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+  }
+
+  .info-message {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #bee5eb;
+  }
+
+  .card {
+    padding: 20px;
+    border: 1px solid #ddd;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    background-color: #fafafa;
+  }
+
+  .card h3 {
+    margin-top: 0;
+    color: #333;
+  }
+
+  .card p {
+    color: #666;
+    line-height: 1.6;
+  }
+
+  .card small {
+    color: #999;
+    display: block;
+    margin-top: 10px;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+  }
+
+  hr {
+    margin: 30px 0;
+    border: none;
+    border-top: 2px solid #eee;
+  }
+
+  </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🔍 AI Vector Search</h1>
+
+<form method="get">
+
+<div class="search-box">
+  <input 
+    type="text" 
+    name="q" 
+    placeholder="Search for products, services, or keywords..."
+    value="<%= query || '' %>"
+  />
+  <button type="submit">Search</button>
+</div>
+
+</form>
+
+<hr/>
+
+<!-- Display error messages -->
+<% if(error) { %>
+  <div class="error-message">
+    <strong>⚠️ Error:</strong> <%= error %>
+  </div>
+<% } %>
+
+<!-- Display results count -->
+<% if(query && !error) { %>
+  <div class="info-message">
+    <strong>📊 Search Query:</strong> "<%= query %>"
+    <% if(results && results.length > 0) { %>
+      — Found <strong><%= results.length %></strong> result<%= results.length !== 1 ? 's' : '' %>
+      <% if(searchMethod) { %>
+        <em>(using <%= searchMethod %> search)</em>
+      <% } %>
+    <% } else { %>
+      — No results found
+    <% } %>
+  </div>
+<% } %>
+
+<!-- Display results -->
+<% if(results && results.length > 0) { %>
+  <div class="success-message">
+    ✅ Showing <strong><%= results.length %></strong> search result<%= results.length !== 1 ? 's' : '' %>
+  </div>
+
+  <% results.forEach((item, index) => { %>
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="flex: 1;">
+          <h3><%= index + 1 %>. <%= item.title || 'Untitled' %></h3>
+          <p><%= item.content || 'No description available' %></p>
+          <small>
+            📌 <strong>Type:</strong> <%= item.refType || 'unknown' %>
+            <% if(item.metadata && item.metadata.businessField) { %>
+              | 🏢 <strong>Field:</strong> <%= item.metadata.businessField %>
+            <% } %>
+          </small>
+        </div>
+        <% if(item.similarity || item.similarityPercent) {
+             const displaySimilarity = item.similarityPercent || ((typeof item.similarity === 'number' || !isNaN(parseFloat(item.similarity))) ? ((Number(item.similarity) <= 1 ? (Number(item.similarity) * 100).toFixed(2) : Number(item.similarity).toFixed(2))) : item.similarity);
+        %>
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; border-radius: 8px; text-align: center; min-width: 120px; margin-left: 20px;">
+            <div style="font-size: 28px; font-weight: bold;"><%= displaySimilarity %>%</div>
+            <div style="font-size: 12px; margin-top: 5px;">
+              <% if(item.searchMethod === 'vector') { %>
+                🎯 Vector Match
+              <% } else if(item.searchMethod === 'text') { %>
+                📝 Text Match
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  <% }) %>
+<% } else if(!query) { %>
+  <div class="no-results">
+    <h3>🎯 Ready to search</h3>
+    <p>Enter your search query above to get started</p>
+  </div>
+<% } %>
+
+</div>
+
+</body>
+
+</html>

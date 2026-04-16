@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập Admin</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .login-box { background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .login-box h2 { text-align: center; margin-bottom: 30px; color: #1e293b; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #475569; font-weight: 500; }
+        input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 16px; }
+        input:focus { border-color: #3b82f6; }
+        button { width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        button:hover { background: #2563eb; }
+        #errMsg { color: #dc2626; text-align: center; margin-top: 15px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <h2>Trang Quản Trị</h2>
+    <form id="loginForm">
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="email" required placeholder="admin@tvad.com" value="admin@tvad.com">
+        </div>
+        <div class="form-group">
+            <label>Mật khẩu</label>
+            <input type="password" id="password" required placeholder="••••••••" value="admin123">
+        </div>
+        <button type="submit">Đăng Nhập</button>
+        <div id="errMsg"></div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const msg = document.getElementById('errMsg');
+        
+        try {
+            const res = await fetch('/admin/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                localStorage.setItem('adminToken', data.token);
+                window.location.href = '/admin'; // Chuyển sang dashboard
+            } else {
+                msg.textContent = data.message || 'Lỗi đăng nhập';
+            }
+        } catch (error) {
+            msg.textContent = 'Mất kết nối server';
+        }
+    });
+
+    // Nếu đã có token thì đẩy thẳng vào trong
+    if (localStorage.getItem('adminToken')) {
+        window.location.href = '/admin';
+    }
+</script>
+
+</body>
+</html>
