@@ -1,0 +1,601 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= pageTitle %></title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-smooth: always;
+      text-rendering: optimizeLegibility;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 55%, #ffffff 100%); color: #0f172a; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+    .page { width: min(1200px, 100%); margin: 0 auto; padding: 24px 20px 40px; }
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
+    .brand { font-size: 1.5rem; font-weight: 800; color: #1d4ed8; }
+    .nav-links { display: flex; gap: 18px; align-items: center; }
+    .nav-links a { padding: 10px 16px; border-radius: 999px; transition: background 0.2s ease; }
+    .nav-links a:hover { background: rgba(59, 130, 246, 0.08); }
+    .hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 32px; align-items: center; margin-bottom: 40px; }
+    .hero-title { font-size: clamp(2.5rem, 2rem + 1.5vw, 4rem); line-height: 1.05; margin: 0; }
+    .hero-title span { color: #2563eb; }
+    .hero-text { margin: 24px 0 0; font-size: 1.05rem; line-height: 1.75; max-width: 640px; color: #475569; }
+    .hero-actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 14px; }
+    .btn { border: none; cursor: pointer; border-radius: 14px; font-weight: 700; padding: 14px 22px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-secondary { background: #e2e8f0; color: #0f172a; }
+    .btn:disabled { cursor: not-allowed; opacity: 0.55; transform: none; box-shadow: none; }
+    .hero-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 32px; }
+    .stat-card { background: white; border-radius: 24px; padding: 24px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.06); }
+    .stat-value { font-size: 2rem; font-weight: 800; color: #2563eb; margin: 0; }
+    .stat-label { margin: 8px 0 0; color: #475569; font-size: 0.95rem; }
+    .content-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 30px; }
+    .sidebar { background: white; border-radius: 28px; padding: 28px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.05); border: 1px solid #e2e8f0; }
+    .sidebar h2 { margin-top: 0; font-size: 1.1rem; color: #0f172a; }
+    .steps { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 14px; }
+    .steps li { border-radius: 20px; padding: 16px 18px; display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; border: 1px solid transparent; transition: border-color 0.2s ease, background 0.2s ease; }
+    .steps li.active { border-color: #2563eb; background: #eff6ff; }
+    .steps li span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 999px; background: #e2e8f0; color: #0f172a; font-weight: 700; }
+    .steps li.active span { background: #2563eb; color: white; }
+    .steps li h3 { margin: 0; font-size: 0.98rem; }
+    .steps li p { margin: 6px 0 0; color: #64748b; font-size: 0.92rem; line-height: 1.5; }
+    .form-panel { background: white; border-radius: 28px; padding: 32px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.05); }
+    .form-section { display: none; }
+    .form-section.active { display: block; }
+    .section-title { display: flex; align-items: center; gap: 14px; margin: 0 0 18px; font-size: 1.2rem; font-weight: 700; }
+    .section-intro { margin: 0 0 24px; color: #475569; line-height: 1.75; }
+    .grid-2 { display: grid; gap: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .field { margin-bottom: 20px; }
+    .field label { display: block; margin-bottom: 10px; font-size: 0.95rem; font-weight: 600; color: #0f172a; }
+    .field input, .field select, .field textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 16px; padding: 14px 16px; font-size: 0.95rem; color: #0f172a; background: #ffffff; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+    .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); }
+    .field textarea { min-height: 140px; resize: vertical; }
+    .email-wrapper { position: relative; }
+    .email-status { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.9rem; }
+    .email-status.loading { color: #f59e0b; }
+    .email-status.valid { color: #059669; }
+    .email-status.error { color: #dc2626; }
+    .email-status.checking::after { content: ''; display: inline-block; width: 14px; height: 14px; border: 2px solid #f59e0b; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .email-status-icon { width: 16px; height: 16px; display: inline-block; }
+    .input-row { display: grid; gap: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .checkbox-grid { display: grid; gap: 14px; }
+    .checkbox-card { display: flex; align-items: flex-start; gap: 14px; border: 1px solid #e2e8f0; border-radius: 20px; padding: 18px; background: #f8fafc; }
+    .checkbox-card input { margin-top: 6px; width: 18px; height: 18px; accent-color: #2563eb; }
+    .checkbox-card h4 { margin: 0; font-size: 1rem; }
+    .checkbox-card p { margin: 8px 0 0; color: #475569; font-size: 0.95rem; line-height: 1.6; }
+    .card { border-radius: 24px; background: #f8fafc; padding: 22px; border: 1px solid #e2e8f0; }
+    .card p { margin: 0; color: #475569; }
+    .actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 28px; }
+    .actions .btn { min-width: 160px; }
+    .message { padding: 18px 22px; border-radius: 20px; margin-bottom: 24px; display: none; white-space: pre-wrap; word-wrap: break-word; font-size: 0.95rem; line-height: 1.6; }
+    .message.visible { display: block; }
+    .message.success { background: #ecfdf5; color: #065f46; border: 1px solid #bbf7d0; }
+    .message.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .summary-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .slot-card { border: 1px solid #e2e8f0; border-radius: 20px; overflow: hidden; background: white; }
+    .slot-header { display: flex; justify-content: space-between; gap: 12px; padding: 18px 20px; }
+    .slot-header strong { display: block; font-size: 1rem; }
+    .slot-body { padding: 0 20px 18px; color: #475569; font-size: 0.93rem; line-height: 1.6; }
+    .slot-footer { padding: 14px 20px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .slot-meta { font-size: 0.88rem; color: #475569; }
+    .select-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .select-row input[type="number"] { width: 80px; }
+    .popup-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 24px; }
+    .popup-overlay.visible { display: flex; }
+    .popup-card { width: min(500px, 100%); background: white; border-radius: 28px; padding: 32px 28px; box-shadow: 0 32px 80px rgba(15, 23, 42, 0.2); text-align: center; position: relative; }
+    .popup-card h2 { margin: 0 0 16px; font-size: 2rem; color: #0f172a; }
+    .popup-card p { margin: 0 0 24px; color: #475569; line-height: 1.7; }
+    .popup-card .btn { width: 100%; }
+    .popup-close { position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; border: none; background: transparent; color: #64748b; font-size: 1.2rem; cursor: pointer; }
+    .hidden { display: none !important; }
+    @media (max-width: 1024px) { .hero { grid-template-columns: 1fr; } .content-grid { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } .summary-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div class="brand"> Dreamax</div>
+      <nav class="nav-links">
+        <a href="#register">Đăng ký</a>
+        <a href="#features">Tính năng</a>
+        <a href="#contact">Liên hệ</a>
+      </nav>
+    </header>
+
+    <section class="hero" id="features">
+      <div>
+        <h1 class="hero-title">Giao diện đăng ký nhãn hàng và sản phẩm <span>với Dreamax</span></h1>
+        <p class="hero-text">Nền tảng Dreamax cung cấp giải pháp quản lý nhãn hàng và sản phẩm toàn diện. Bạn có thể đăng ký thông tin nhãn hàng, quản lý nhiều sản phẩm cùng lúc và theo dõi hiệu suất bán hàng trên nền tảng của chúng tôi.</p>
+        <div class="hero-actions">
+          <a href="#register" class="btn btn-primary">Bắt đầu đăng ký</a>
+          <button type="button" class="btn btn-secondary" onclick="window.scrollTo({ top: document.getElementById('register').offsetTop - 20, behavior: 'smooth' })">Xem giao diện</button>
+        </div>
+      </div>
+      <div class="hero-card">
+        <div class="stat-card">
+          <p class="stat-value">1000+</p>
+          <p class="stat-label">Nhãn hàng đã đăng ký</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-value">5000+</p>
+          <p class="stat-label">Sản phẩm tham gia</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-value">98%</p>
+          <p class="stat-label">Khách hàng hài lòng</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-value">3 bước</p>
+          <p class="stat-label">Hoàn tất đăng ký nhanh</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="content-grid" id="register">
+      <aside class="sidebar">
+        <h2>Hướng dẫn đăng ký</h2>
+        <p class="section-intro">Hoàn thành 3 bước sau để đăng ký nhãn hàng và sản phẩm với Dreamax. Dữ liệu sẽ được lưu và xử lý ngay tức thì.</p>
+        <ul class="steps" id="sidebarSteps">
+          <li class="active" data-step="1"><span>1</span><div><h3>Thông tin nhãn hàng</h3><p>Nhập tên, kiểu hình sở hữu, liên hệ.</p></div></li>
+          <li data-step="2"><span>2</span><div><h3>Sản phẩm</h3><p>Thêm các sản phẩm của nhãn hàng.</p></div></li>
+          <li data-step="3"><span>3</span><div><h3>Nhu cầu hỗ trợ</h3><p>Chọn dịch vụ hỗ trợ bạn cần.</p></div></li>
+        </ul>
+      </aside>
+
+      <main class="form-panel">
+        <div id="messageBox" class="message"></div>
+
+        <form id="registrationForm">
+          <section class="form-section active" data-step="1">
+            <div class="section-title">1. Thông tin nhãn hàng</div>
+            <p class="section-intro">Cung cấp thông tin chi tiết về nhãn hàng của bạn.</p>
+            <div class="grid-2">
+              <div class="field">
+                <label for="ownershipType">Loại hình sở hữu</label>
+                <select id="ownershipType" name="businessInfo[ownershipType]" required>
+                  <option value="">-- Vui lòng chọn --</option>
+                  <option value="business">Doanh nghiệp</option>
+                  <option value="individual">Cá nhân/Tự doanh</option>
+                  <option value="other">Khác</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="businessName">Tên nhãn hàng</label>
+                <input id="businessName" name="businessInfo[businessName]" type="text" placeholder="Tên nhãn hàng / thương hiệu" required />
+              </div>
+            </div>
+            <div class="field">
+              <label for="businessLogo">Logo nhãn hàng</label>
+              <input id="businessLogo" name="businessInfo[logo]" type="file" accept="image/*" />
+              <small style="color: #64748b; margin-top: 8px; display: block;">JPG, PNG hoặc GIF. Tối đa 2MB.</small>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="taxCode">Mã số thuế / CMND</label>
+                <input id="taxCode" name="businessInfo[taxCode]" type="text" placeholder="Mã số thuế hoặc CMND" required />
+              </div>
+              <div class="field">
+                <label for="address">Địa chỉ</label>
+                <input id="address" name="businessInfo[address]" type="text" placeholder="Địa chỉ đăng ký" required />
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="phone">Số điện thoại</label>
+                <input id="phone" name="businessInfo[phone]" type="text" placeholder="Số điện thoại liên hệ" required />
+              </div>
+              <div class="field email-wrapper">
+                <label for="email">Email liên hệ</label>
+                <input id="email" name="businessInfo[email]" type="email" placeholder="Email chính" required />
+                <div id="emailStatus" class="email-status" style="display:none;"></div>
+              </div>
+            </div>
+            <div class="field">
+              <label for="website">Website / Cửa hàng online</label>
+              <input id="website" name="businessInfo[website]" type="text" placeholder="https://" />
+            </div>
+            <div class="section-title">Thông tin người liên hệ</div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="contactName">Tên người liên hệ</label>
+                <input id="contactName" name="businessInfo[contactRepresentative][name]" type="text" placeholder="Người phụ trách" required />
+              </div>
+              <div class="field">
+                <label for="contactPhone">Điện thoại liên hệ</label>
+                <input id="contactPhone" name="businessInfo[contactRepresentative][phone]" type="text" placeholder="Số điện thoại" required />
+              </div>
+            </div>
+            <div class="field">
+              <label for="contactEmail">Email người liên hệ</label>
+              <input id="contactEmail" name="businessInfo[contactRepresentative][email]" type="email" placeholder="Email liên hệ" required />
+            </div>
+          </section>
+
+          <section class="form-section" data-step="2">
+            <div class="section-title">2. Thông tin sản phẩm</div>
+            <p class="section-intro">Thêm sản phẩm của nhãn hàng bạn. Bạn có thể đăng ký nhiều sản phẩm cùng lúc.</p>
+            <div id="productServicesContainer"></div>
+            <div class="actions" style="justify-content:flex-start;padding-top:0;">
+              <button type="button" class="btn btn-secondary" id="addProductServiceButton">Thêm sản phẩm</button>
+            </div>
+          </section>
+
+          <section class="form-section" data-step="3">
+            <div class="section-title">3. Nhu cầu hỗ trợ</div>
+            <p class="section-intro">Chọn các dịch vụ hỗ trợ từ Dreamax mà bạn quan tâm.</p>
+            <div class="checkbox-grid">
+              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]" value="product_service_promotion" />
+                <div><h4>Hỗ trợ tiếp thị</h4><p>Hỗ trợ quảng bá sản phẩm và xây dựng thương hiệu.</p></div>
+              </label>
+              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]" value="market_development" />
+                <div><h4>Mở rộng thị trường</h4><p>Hỗ trợ phân phối, logistics và quản lý kho.</p></div>
+              </label>
+              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]" value="investment_connection" />
+                <div><h4>Tư vấn kinh doanh</h4><p>Hỗ trợ chiến lược bán hàng và phát triển sản phẩm.</p></div>
+              </label>
+              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]" value="policy_advocacy" />
+                <div><h4>Dịch vụ khác</h4><p>Các dịch vụ hỗ trợ bổ sung khác từ Dreamax.</p></div>
+              </label>
+            </div>
+            <div class="field">
+              <label for="needsDescription">Mô tả chi tiết nhu cầu</label>
+              <textarea id="needsDescription" name="collaborationNeeds[needs][][description]" placeholder="Mô tả thêm nhu cầu hỗ trợ của bạn"></textarea>
+            </div>
+          </section>
+
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" id="prevButton">Quay lại</button>
+            <button type="button" class="btn btn-secondary" id="nextButton">Tiếp theo</button>
+            <button type="button" class="btn btn-primary" id="submitButton">Gửi đăng ký</button>
+          </div>
+        </form>
+      </main>
+    </div>
+  </div>
+
+  <div id="successPopup" class="popup-overlay" role="dialog" aria-modal="true" aria-labelledby="successPopupTitle">
+    <div class="popup-card">
+      <button type="button" class="popup-close" aria-label="Đóng popup">×</button>
+      <h2 id="successPopupTitle">Đăng ký thành công!</h2>
+      <p>Thông tin của bạn đã được ghi nhận. Chúng tôi sẽ liên hệ lại sớm nhất có thể.</p>
+      <button id="closePopupButton" type="button" class="btn btn-primary">Đóng</button>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('registrationForm');
+    const sections = Array.from(document.querySelectorAll('.form-section'));
+    const sidebarItems = Array.from(document.querySelectorAll('.steps li'));
+    const messageBox = document.getElementById('messageBox');
+    const prevButton = document.getElementById('prevButton');
+    const nextButton = document.getElementById('nextButton');
+    const submitButton = document.getElementById('submitButton');
+    const productServicesContainer = document.getElementById('productServicesContainer');
+    const addProductServiceButton = document.getElementById('addProductServiceButton');
+    let currentStep = 1;
+    let productServiceCount = 0;
+
+    function createProductServiceCard(index) {
+      return `
+        <div class="card product-card" data-index="${index}">
+          <div class="section-title" style="margin-bottom: 16px;">Sản phẩm ${index + 1}</div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="productName_${index}">Tên sản phẩm</label>
+              <input id="productName_${index}" name="productServices[${index}][productName]" type="text" placeholder="Tên sản phẩm của bạn" required />
+            </div>
+            <div class="field">
+              <label for="productType_${index}">Phân loại sản phẩm</label>
+              <select id="productType_${index}" name="productServices[${index}][productType]">
+                <option value="product">Sản phẩm vật lý</option>
+                <option value="service">Dịch vụ</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="businessField_${index}">Danh mục sản phẩm</label>
+              <input id="businessField_${index}" name="productServices[${index}][businessField]" type="text" placeholder="Ví dụ: Thời trang, Điện tử, Thực phẩm..." required />
+            </div>
+            <div class="field">
+              <label for="baseCost_${index}">Giá sản phẩm (VND)</label>
+              <input id="baseCost_${index}" name="productServices[${index}][baseCost]" type="number" min="0" step="1000" placeholder="0" required />
+            </div>
+          </div>
+          <div class="field">
+            <label for="generalDescription_${index}">Mô tả sản phẩm</label>
+            <textarea id="generalDescription_${index}" name="productServices[${index}][generalDescription]" placeholder="Mô tả chi tiết về sản phẩm, tính năng, lợi ích cho khách hàng" required></textarea>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="keywords_${index}">Từ khóa / Hashtag</label>
+              <input id="keywords_${index}" name="productServices[${index}][keywords]" type="text" placeholder="chất lượng, giá rẻ, bền bỉ..." />
+            </div>
+            <div class="field">
+              <label for="certificatesAwards_${index}">Chứng nhận / Giải thưởng</label>
+              <input id="certificatesAwards_${index}" name="productServices[${index}][certificatesAwards]" type="text" placeholder="Chứng nhận, bằng khen..." />
+          </div>
+          <div class="field">
+            <label for="certificateFiles_${index}">Upload giấy chứng nhận</label>
+            <input id="certificateFiles_${index}" name="productServices[${index}][certificateFiles]" type="file" multiple accept="image/*,.pdf" />
+            <small style="color: #64748b; margin-top: 8px; display: block;">Ảnh hoặc PDF. Tối đa 5MB mỗi file.</small>
+          </div>
+          </div>
+          <div class="field">
+            <label for="mainSocialChannel_${index}">Kênh chính</label>
+            <input id="mainSocialChannel_${index}" name="productServices[${index}][mainSocialChannel]" type="text" placeholder="Website hoặc fanpage" />
+          </div>
+          <div class="field">
+            <label for="mediaFilesDescription_${index}">Mô tả hình ảnh / file</label>
+            <input id="mediaFilesDescription_${index}" name="productServices[${index}][mediaFilesDescription]" type="text" placeholder="Ghi chú hình ảnh hoặc tài liệu hỗ trợ" />
+          </div>
+          <div class="field">
+            <label for="productImages_${index}">Upload hình ảnh sản phẩm</label>
+            <input id="productImages_${index}" name="productServices[${index}][images]" type="file" multiple accept="image/*" />
+            <small style="color: #64748b; margin-top: 8px; display: block;">JPG, PNG hoặc GIF. Tối đa 5MB mỗi ảnh.</small>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProductServices() {
+      if (productServiceCount === 0) {
+        productServiceCount = 1;
+      }
+      productServicesContainer.innerHTML = Array.from({ length: productServiceCount }, (_, index) => createProductServiceCard(index)).join('');
+      bindProductServiceButtons();
+    }
+
+    function bindProductServiceButtons() {
+      productServicesContainer.querySelectorAll('.removeProductServiceButton').forEach((button) => {
+        button.removeEventListener('click', onRemoveProductService);
+        button.addEventListener('click', onRemoveProductService);
+      });
+    }
+
+    function onRemoveProductService(event) {
+      if (productServiceCount <= 1) return;
+      productServiceCount -= 1;
+      renderProductServices();
+    }
+
+    function addProductService() {
+      productServiceCount += 1;
+      renderProductServices();
+    }
+
+    function setActiveStep(step) {
+      if (step < 1 || step > 3) return;
+      clearMessage();
+      currentStep = step;
+      sections.forEach((section) => section.classList.toggle('active', Number(section.dataset.step) === step));
+      sidebarItems.forEach((item) => item.classList.toggle('active', Number(item.dataset.step) === step));
+      prevButton.style.display = step === 1 ? 'none' : 'inline-flex';
+      nextButton.style.display = step === 3 ? 'none' : 'inline-flex';
+      submitButton.style.display = step === 3 ? 'inline-flex' : 'none';
+      submitButton.disabled = step !== 3;
+      submitButton.style.cursor = step === 3 ? 'pointer' : 'not-allowed';
+      submitButton.style.pointerEvents = step === 3 ? 'auto' : 'none';
+      window.scrollTo({ top: document.querySelector('.form-panel').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function showMessage(type, text) {
+      messageBox.textContent = text;
+      messageBox.className = 'message visible ' + type;
+      messageBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function clearMessage() {
+      messageBox.className = 'message';
+      messageBox.textContent = '';
+    }
+
+    function collectPayload() {
+      const formData = new FormData(form);
+      return formData;
+    }
+
+    function validateProductServices() {
+      const productCards = Array.from(productServicesContainer.querySelectorAll('.product-card'));
+      if (productCards.length === 0) {
+        showMessage('error', 'Vui lòng nhập ít nhất một sản phẩm.');
+        return false;
+      }
+
+      const errors = [];
+      for (let i = 0; i < productCards.length; i++) {
+        const card = productCards[i];
+        const productName = card.querySelector('input[name^="productServices"][name$="[productName]"]').value.trim();
+        const businessField = card.querySelector('input[name^="productServices"][name$="[businessField]"]').value.trim();
+        const baseCost = card.querySelector('input[name^="productServices"][name$="[baseCost]"]').value.trim();
+        const generalDescription = card.querySelector('textarea[name^="productServices"][name$="[generalDescription]"]').value.trim();
+
+        if (!productName) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập tên sản phẩm`);
+        if (!businessField) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập danh mục sản phẩm`);
+        if (baseCost === '' || Number(baseCost) < 0) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập giá sản phẩm hợp lệ`);
+        if (!generalDescription) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập mô tả sản phẩm`);
+      }
+
+      if (errors.length > 0) {
+        showMessage('error', '❌ Thông tin sản phẩm chưa đầy đủ:\n• ' + errors.join('\n• '));
+        return false;
+      }
+
+      return true;
+    }
+
+    function validateStep1() {
+      const errors = [];
+      const ownershipType = document.getElementById('ownershipType').value.trim();
+      const businessName = document.getElementById('businessName').value.trim();
+      const taxCode = document.getElementById('taxCode').value.trim();
+      const address = document.getElementById('address').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const contactName = document.getElementById('contactName').value.trim();
+      const contactPhone = document.getElementById('contactPhone').value.trim();
+      const contactEmail = document.getElementById('contactEmail').value.trim();
+
+      if (!ownershipType) errors.push('Loại hình sở hữu');
+      if (!businessName) errors.push('Tên nhãn hàng');
+      if (!taxCode) errors.push('Mã số thuế / CMND');
+      if (!address) errors.push('Địa chỉ');
+      if (!phone) errors.push('Số điện thoại nhãn hàng');
+      if (!email) errors.push('Email liên hệ (chính)');
+      if (!contactName) errors.push('Tên người liên hệ');
+      if (!contactPhone) errors.push('Điện thoại người liên hệ');
+      if (!contactEmail) errors.push('Email người liên hệ');
+
+      if (errors.length > 0) {
+        showMessage('error', '❌ Bước 1 - Thông tin nhãn hàng chưa đầy đủ, vui lòng điền:\n• ' + errors.join('\n• '));
+        return false;
+      }
+
+      return true;
+    }
+
+    function validateStep3() {
+      // Step 3 (nhu cầu hỗ trợ) là optional - người dùng có thể bỏ qua
+      // Chỉ validate nếu họ chọn checkbox thì phải có ít nhất một
+      const checkboxes = document.querySelectorAll('.form-section[data-step="3"] input[type="checkbox"]');
+      const hasCheckedBox = Array.from(checkboxes).some(cb => cb.checked);
+      
+      // Nếu không chọn gì, vẫn allow submit (optional step)
+      clearMessage();
+      return true;
+    }
+
+    function validateCurrentStep() {
+      clearMessage();
+      if (currentStep === 1) {
+        return validateStep1();
+      }
+      if (currentStep === 2) {
+        return validateProductServices();
+      }
+      if (currentStep === 3) {
+        return validateStep3();
+      }
+      return true;
+    }
+
+    prevButton.addEventListener('click', () => setActiveStep(currentStep - 1));
+    nextButton.addEventListener('click', () => {
+      clearMessage();
+      if (!validateCurrentStep()) return;
+      setActiveStep(currentStep + 1);
+    });
+
+    addProductServiceButton.addEventListener('click', addProductService);
+    // Không cho người dùng nhảy bước bằng cách click vào sidebar
+    sidebarItems.forEach((item) => {
+      item.style.cursor = 'default';
+    });
+
+    // Email check functionality
+    const emailInput = document.getElementById('email');
+    const emailStatus = document.getElementById('emailStatus');
+    let emailCheckTimeout;
+
+    emailInput.addEventListener('input', debounceEmailCheck);
+
+    function debounceEmailCheck() {
+      clearTimeout(emailCheckTimeout);
+      const email = emailInput.value.trim();
+
+      if (!email) {
+        emailStatus.style.display = 'none';
+        return;
+      }
+
+      emailStatus.style.display = 'flex';
+      emailStatus.className = 'email-status checking';
+      emailStatus.innerHTML = '<span class="email-status-icon">⏳</span> <span>Đang kiểm tra...</span>';
+
+      emailCheckTimeout = setTimeout(async () => {
+        try {
+          const response = await fetch(`/api/auth/check-email?email=${encodeURIComponent(email)}`);
+          const data = await response.json();
+
+          if (data.exists) {
+            emailStatus.className = 'email-status error';
+            emailStatus.innerHTML = '<span class="email-status-icon">✕</span> <span>Email này đã được đăng ký. Vui lòng sử dụng email khác.</span>';
+            emailInput.setCustomValidity('Email này đã được đăng ký.');
+          } else {
+            emailStatus.className = 'email-status valid';
+            emailStatus.innerHTML = '<span class="email-status-icon">✓</span> <span>Email có sẵn để sử dụng.</span>';
+            emailInput.setCustomValidity('');
+          }
+        } catch (error) {
+          emailStatus.className = 'email-status error';
+          emailStatus.innerHTML = '<span class="email-status-icon">!</span> <span>Không thể kiểm tra. Vui lòng thử lại.</span>';
+        }
+      }, 500);
+    }
+
+    submitButton.addEventListener('click', async (event) => {
+      if (currentStep !== 3) return;
+      event.preventDefault();
+      if (!validateCurrentStep()) return;
+      clearMessage();
+      submitButton.disabled = true;
+      submitButton.textContent = 'Đang gửi...';
+
+      try {
+        const payload = collectPayload();
+        const response = await fetch('/register/submit', {
+          method: 'POST',
+          body: payload
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || 'Lỗi khi gửi dữ liệu.');
+        }
+        showSuccessPopup(result.message || 'Đăng ký thành công.');
+        form.reset();
+        productServiceCount = 1;
+        renderProductServices();
+        setActiveStep(1);
+      } catch (error) {
+        showMessage('error', error.message || 'Đã có lỗi xảy ra.');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Gửi đăng ký';
+      }
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+    });
+
+    const successPopup = document.getElementById('successPopup');
+    const closePopupButton = document.getElementById('closePopupButton');
+    const popupCloseIcon = document.querySelector('.popup-close');
+
+    function showSuccessPopup(message) {
+      successPopup.querySelector('p').textContent = message;
+      successPopup.classList.add('visible');
+    }
+
+    function hideSuccessPopup() {
+      successPopup.classList.remove('visible');
+    }
+
+    closePopupButton.addEventListener('click', hideSuccessPopup);
+    popupCloseIcon.addEventListener('click', hideSuccessPopup);
+    successPopup.addEventListener('click', (event) => {
+      if (event.target === successPopup) hideSuccessPopup();
+    });
+
+    renderProductServices();
+    setActiveStep(1);
+  </script>
+</body>
+</html>

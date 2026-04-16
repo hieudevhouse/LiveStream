@@ -1,0 +1,54 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  variables:
+    GIT_STRATEGY: none
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  before_script:
+    - apt-get update -qq
+    - apt-get install -qq git openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+  script: |
+    # Xác định tên service dựa theo branch
+    if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+      DEPLOY_NAME="$SERVICE_NAME"
+      IMAGE_TAG="prod"
+      GIT_BRANCH="main"
+      PORT=5000
+    elif [ "$CI_COMMIT_BRANCH" = "dev" ]; then
+      DEPLOY_NAME="${SERVICE_NAME}_dev"
+      IMAGE_TAG="dev"
+      GIT_BRANCH="dev"
+      PORT=5001
+    else
+      echo "❌ Nhánh $CI_COMMIT_BRANCH không được cấu hình để deploy."
+      exit 1
+    fi
+
+    ssh -o StrictHostKeyChecking=no -T $SSH_USER@$SSH_SERVER_IP <<EOSSH
+    set -e
+    echo "Deploying $DEPLOY_NAME..."
+    rm -rf $DEPLOY_NAME || true
+    git clone https://oauth2:$GITLAB_TOKEN@gitlab.com/dreamaxcompany/tvad-form-api.git $DEPLOY_NAME
+    cd $DEPLOY_NAME
+    git checkout $GIT_BRANCH
+    git pull origin $GIT_BRANCH
+
+    echo "🚀 Build Docker image..."
+    docker stop $DEPLOY_NAME || true
+    docker rm $DEPLOY_NAME || true
+    docker build --build-arg NODE_VERSION=20.19.1 -t $DEPLOY_NAME:$IMAGE_TAG .
+
+    echo "📦 Run container..."
+    docker run -d --name $DEPLOY_NAME -p $PORT:5000 $DEPLOY_NAME:$IMAGE_TAG
+
+    docker ps -a
+    echo "✅ Deploy thành công"
+    EOSSH
