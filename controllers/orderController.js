@@ -85,6 +85,13 @@ class OrderController {
           });
         }
 
+        if (voucher.applicableProduct && voucher.applicableProduct.toString() !== productId.toString()) {
+          return res.status(400).json({
+            success: false,
+            message: 'Voucher này không áp dụng cho sản phẩm bạn đang đặt'
+          });
+        }
+
         if (totalPrice < voucher.minimumOrder) {
           return res.status(400).json({
             success: false,
