@@ -55,6 +55,12 @@ const voucherSchema = new mongoose.Schema({
 
   validUntil: Date,
 
+  applicableProduct: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ProductService',
+    default: null
+  },
+
   isActive: {
     type: Boolean,
     default: true
