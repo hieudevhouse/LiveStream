@@ -133,8 +133,10 @@ const startServer = async () => {
     await connectDB();
     await connectLakehouseDB();
 
-    lakeIngestion.startCron();
-
+    // lakeIngestion.startCron();
+    if (process.env.NODE_ENV !== 'production') {
+      lakeIngestion.startCron();
+    }
     // chỉ listen khi chạy local
     if (process.env.NODE_ENV !== 'production') {
       app.listen(PORT, '0.0.0.0', () => {
