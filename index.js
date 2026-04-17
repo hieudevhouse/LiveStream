@@ -92,9 +92,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // View Engine
-app.set("view engine", "ejs");
-app.set("views", "./views");
+const path = require('path');
 
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 // Page routes
 app.use('/', require('./routes/register'));
 app.use('/products', require('./routes/productPages'));
