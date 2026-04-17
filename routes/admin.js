@@ -7,6 +7,7 @@ const User = require('../models/User');
 const ProductService = require('../models/ProductService');
 const Voucher = require('../models/Voucher');
 const Order = require('../models/Order');
+const BusinessOwner = require('../models/BusinessOwner');
 const { authAdmin } = require('../middlewares/auth');
 
 // === WEB ROUTES ===
@@ -107,6 +108,15 @@ router.get('/api/products', authAdmin, async (req, res) => {
     }
 });
 
+router.post('/api/products', authAdmin, async (req, res) => {
+    try {
+        const newProduct = await ProductService.create(req.body);
+        res.status(201).json({ success: true, data: newProduct });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+});
+
 router.put('/api/products/:id', authAdmin, async (req, res) => {
     try {
         const updated = await ProductService.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -135,6 +145,19 @@ router.get('/api/orders', authAdmin, async (req, res) => {
     }
 });
 
+router.get('/api/orders/:id', authAdmin, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id)
+            .populate('product')
+            .populate('businessOwner', 'businessName email contactPhone name')
+            .populate('voucher');
+        if (!order) return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng' });
+        res.json({ success: true, data: order });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 router.put('/api/orders/:id/status', authAdmin, async (req, res) => {
     try {
         const { status } = req.body;
@@ -142,6 +165,16 @@ router.put('/api/orders/:id/status', authAdmin, async (req, res) => {
         res.json({ success: true, data: updated });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });
+    }
+});
+
+// --- Business Owners API for dropdowns ---
+router.get('/api/business-owners', authAdmin, async (req, res) => {
+    try {
+        const owners = await BusinessOwner.find().select('businessName name email');
+        res.json({ success: true, data: owners });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
     }
 });
 

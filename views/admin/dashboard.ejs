@@ -493,16 +493,94 @@
             }
         }
 
-        select {
+        select, .form-input {
             width: 100%;
             padding: 12px;
             border-radius: 10px;
             outline: none;
             border: 1px solid var(--border);
-            appearance: none;
             background: #f8fafc;
-            font-weight: 600;
+            font-weight: 500;
+            font-family: inherit;
         }
+
+        .form-input:focus, select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .modal-lg {
+            width: 700px;
+            max-width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+        }
+
+        .modal-header-nav h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #94a3b8;
+        }
+        .close-btn:hover { color: #ef4444; }
+
+        /* Order Details Styles */
+        .order-detail-card {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .order-detail-header {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        .detail-row span:first-child { color: var(--text-muted); }
+        .detail-row span:last-child { font-weight: 600; text-align: right; }
     </style>
 </head>
 
@@ -634,6 +712,9 @@
                         <p style="color: var(--text-muted);">Thông tin chi tiết các mặt hàng nông nghiệp tại các gian
                             hàng.</p>
                     </div>
+                    <div>
+                        <button class="btn-fair" onclick="openProductModal()">+ Thêm Sản phẩm</button>
+                    </div>
                 </div>
                 <div class="expo-container">
                     <table class="expo-table" id="productsTable">
@@ -658,6 +739,9 @@
                         <h2>Thẻ Ưu đãi & Voucher</h2>
                         <p style="color: var(--text-muted);">Quản lý các chương trình tri ân dành cho khách tham quan
                             hội chợ.</p>
+                    </div>
+                    <div>
+                        <button class="btn-fair" onclick="openVoucherModal()">+ Tạo Voucher mới</button>
                     </div>
                 </div>
                 <div class="expo-container">
@@ -709,6 +793,167 @@
     </div>
 
     <div class="toast-box" id="toastContainer"></div>
+
+    <!-- PRODUCT MODAL -->
+    <div class="overlay" id="productOverlay">
+        <div class="modal modal-lg">
+            <div class="modal-header-nav">
+                <h3 id="productModalTitle">Cập nhật Sản phẩm</h3>
+                <button class="close-btn" onclick="closeModal('productOverlay')">×</button>
+            </div>
+            <form id="productForm" onsubmit="saveProduct(event)">
+                <input type="hidden" id="productId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tên sản phẩm/Dịch vụ</label>
+                        <input type="text" class="form-input" id="pName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Gian hàng (Business Owner)</label>
+                        <select id="pOwner" required>
+                            <option value="">-- Chọn doanh nghiệp --</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Loại hình</label>
+                        <select id="pType" required>
+                            <option value="product">Sản phẩm vật lý</option>
+                            <option value="service">Dịch vụ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Lĩnh vực</label>
+                        <input type="text" class="form-input" id="pField" required placeholder="VD: Nông sản sạch">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Giá niêm yết (VND)</label>
+                        <input type="number" class="form-input" id="pPrice" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Tồn kho hiện tại</label>
+                        <input type="number" class="form-input" id="pStock" min="0" placeholder="Để trống nếu không giới hạn">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Mô tả ngắn</label>
+                    <textarea class="form-input" id="pDesc" rows="3" placeholder="Thông tin nổi bật của sản phẩm"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>URL Hình ảnh (Link ảnh)</label>
+                    <input type="url" class="form-input" id="pImg" placeholder="https://...">
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="button" onclick="closeModal('productOverlay')" style="flex: 1; padding: 14px; border: none; background: #f1f5f9; border-radius: 12px; font-weight: 700; cursor: pointer;">Hủy</button>
+                    <button type="submit" style="flex: 1; padding: 14px; border: none; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; cursor: pointer;">Lưu thông tin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- VOUCHER MODAL -->
+    <div class="overlay" id="voucherOverlay">
+        <div class="modal">
+            <div class="modal-header-nav">
+                <h3 id="voucherModalTitle">Tạo Thẻ Ưu Đãi</h3>
+                <button class="close-btn" onclick="closeModal('voucherOverlay')">×</button>
+            </div>
+            <form id="voucherForm" onsubmit="saveVoucher(event)">
+                <input type="hidden" id="voucherId">
+                <div class="form-group">
+                    <label>Mã Voucher (Code)</label>
+                    <input type="text" class="form-input" id="vCode" style="text-transform: uppercase;" required placeholder="VD: EXPO2026">
+                </div>
+                <div class="form-group">
+                    <label>Tên chương trình</label>
+                    <input type="text" class="form-input" id="vName" required placeholder="Giảm giá khai mạc">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Loại Giảm</label>
+                        <select id="vType">
+                            <option value="fixed">Giảm Trực Tiếp (VND)</option>
+                            <option value="percentage">Giảm Phần Trăm (%)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mức Giảm</label>
+                        <input type="number" class="form-input" id="vValue" required min="1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Đơn tối thiểu</label>
+                        <input type="number" class="form-input" id="vMin" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Giới hạn xài</label>
+                        <input type="number" class="form-input" id="vLimit" placeholder="Để trống = vô hạn">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 24px;">
+                    <button type="button" onclick="closeModal('voucherOverlay')" style="flex: 1; padding: 14px; border: none; background: #f1f5f9; border-radius: 12px; font-weight: 700; cursor: pointer;">Hủy</button>
+                    <button type="submit" style="flex: 1; padding: 14px; border: none; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; cursor: pointer;">Lưu lưu đãi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ORDER DETAIL MODAL -->
+    <div class="overlay" id="orderDetailOverlay">
+        <div class="modal modal-lg">
+            <div class="modal-header-nav">
+                <h3>Chi tiết Giao dịch: <span id="dtOrderNo" style="color:var(--text-main)">...</span></h3>
+                <button class="close-btn" onclick="closeModal('orderDetailOverlay')">×</button>
+            </div>
+            
+            <div class="form-row">
+                <!-- Cột trái: Khách hàng & Giao hàng -->
+                <div>
+                    <div class="order-detail-card">
+                        <div class="order-detail-header">👤 Khách hàng</div>
+                        <div class="detail-row"><span>Tên:</span><span id="dtCustName">-</span></div>
+                        <div class="detail-row"><span>SĐT:</span><span id="dtCustPhone">-</span></div>
+                        <div class="detail-row"><span>Email:</span><span id="dtCustEmail">-</span></div>
+                    </div>
+                    <div class="order-detail-card">
+                        <div class="order-detail-header">📍 Giao hàng</div>
+                        <div class="detail-row"><span>Địa chỉ:</span><span id="dtAddress">-</span></div>
+                        <div class="detail-row"><span>Khu vực:</span><span id="dtRegion">-</span></div>
+                        <div class="detail-row"><span>Ghi chú:</span><span id="dtNotes">-</span></div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Đơn hàng & Thanh toán -->
+                <div>
+                    <div class="order-detail-card">
+                        <div class="order-detail-header">📦 Sản phẩm</div>
+                        <div class="detail-row"><span>Mặt hàng:</span><span id="dtProduct" style="color:var(--primary)">-</span></div>
+                        <div class="detail-row"><span>Gian hàng:</span><span id="dtOwner">-</span></div>
+                        <div class="detail-row"><span>Số lượng:</span><span id="dtQty">-</span></div>
+                        <div class="detail-row"><span>Đơn giá:</span><span id="dtPrice">-</span></div>
+                    </div>
+                    <div class="order-detail-card" style="background:#f0fdf4; border: 1px solid #dcfce7;">
+                        <div class="order-detail-header">💰 Thanh toán</div>
+                        <div class="detail-row"><span>Tạm tính:</span><span id="dtTotal">-</span></div>
+                        <div class="detail-row"><span>Mã giảm (<span id="dtVoucherCode">none</span>):</span><span id="dtDiscount" style="color:var(--accent)">-</span></div>
+                        <div class="detail-row" style="margin-top:10px; padding-top:10px; border-top:1px solid #dcfce7;">
+                            <span style="font-weight:800; color:var(--text-main)">THỰC THU:</span>
+                            <span id="dtFinal" style="font-size:1.2rem; font-weight:800; color:var(--primary)">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:20px; text-align:right;">
+                <button type="button" onclick="closeModal('orderDetailOverlay')" style="padding: 12px 24px; border: none; background: #e2e8f0; color:#475569; border-radius: 12px; font-weight: 700; cursor: pointer; margin-right:10px;">Đóng</button>
+                <button type="button" onclick="openMod(currOrderObj._id, currOrderObj.status)" style="padding: 12px 24px; border: none; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; cursor: pointer;">Cập nhật Lộ trình</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const token = localStorage.getItem('adminToken');
@@ -810,7 +1055,10 @@
                         </td>
                         <td><div style="font-weight: 800; color: var(--primary);">${o.finalPrice.toLocaleString()} ₫</div></td>
                         <td><span class="booth-pill bg-${o.status}">${translate(o.status)}</span></td>
-                        <td><button class="action-btn" onclick="openMod('${o._id}', '${o.status}')">✏️</button></td>
+                        <td>
+                            <button class="action-btn" onclick="viewOrder('${o._id}')">👁️</button>
+                            <button class="action-btn" onclick="openMod('${o._id}', '${o.status}')">✏️</button>
+                        </td>
                     </tr>
                 `).join('');
             }
@@ -831,7 +1079,7 @@
                         <td><span class="booth-pill" style="background:#f1f5f9;">${p.businessField}</span></td>
                         <td style="font-weight: 700;">${p.pricing?.baseCost?.toLocaleString()} ₫</td>
                         <td style="color: var(--primary); font-weight: 800;">${p.vouchers?.length > 0 ? p.vouchers[0].code : '---'}</td>
-                        <td><button class="action-btn" onclick="delExpo('products', '${p._id}')">🗑️</button></td>
+                        <td><button class="action-btn" onclick="openProductModal('${p._id}')">✏️</button> <button class="action-btn" onclick="delExpo('products', '${p._id}')">🗑️</button></td>
                     </tr>
                 `).join('');
             }
@@ -848,7 +1096,7 @@
                         <td style="color: var(--accent); font-weight: 800;">${v.discountType === 'percentage' ? '-' + v.discountValue + '%' : '-' + v.discountValue.toLocaleString() + ' ₫'}</td>
                         <td style="font-size: 0.8rem;">${v.validUntil ? new Date(v.validUntil).toLocaleDateString('vi-VN') : 'Mãi mãi'}</td>
                         <td style="font-weight: 700;">${v.usageCount || 0} lần</td>
-                        <td><button class="action-btn" onclick="delExpo('vouchers', '${v._id}')">🗑️</button></td>
+                        <td><button class="action-btn" onclick="openVoucherModal('${v._id}')">✏️</button> <button class="action-btn" onclick="delExpo('vouchers', '${v._id}')">🗑️</button></td>
                     </tr>
                 `).join('');
             }
@@ -865,6 +1113,200 @@
 
         async function delExpo(t, id) { if (!confirm('Expo Monitor: Xóa dữ liệu này?')) return; const r = await fetchExpo(`/admin/api/${t}/${id}`, 'DELETE'); if (r && r.success) { notify('Dữ liệu đã được gỡ khỏi hệ thống.'); loadData(target); } }
 
+        let currOrderObj = null;
+        let allBusinessOwners = [];
+
+        async function fetchOwners() {
+            const r = await fetchExpo('/admin/api/business-owners');
+            if (r && r.success) {
+                allBusinessOwners = r.data;
+                const select = document.getElementById('pOwner');
+                select.innerHTML = '<option value="">-- Chọn doanh nghiệp --</option>' + 
+                    r.data.map(owner => `<option value="${owner._id}">${owner.businessName} (${owner.name})</option>`).join('');
+            }
+        }
+
+        // --- Order Modal ---
+        async function viewOrder(id) {
+            const r = await fetchExpo(`/admin/api/orders/${id}`);
+            if (r && r.success) {
+                const o = r.data;
+                currOrderObj = o;
+                document.getElementById('dtOrderNo').innerText = o.orderNumber || 'EXPO-' + o._id.slice(-6).toUpperCase();
+                document.getElementById('dtCustName').innerText = o.customerName;
+                document.getElementById('dtCustPhone').innerText = o.customerPhone;
+                document.getElementById('dtCustEmail').innerText = o.customerEmail;
+                document.getElementById('dtAddress').innerText = o.address;
+                document.getElementById('dtRegion').innerText = `${o.district}, ${o.city}`;
+                document.getElementById('dtNotes').innerText = o.notes || 'Không có';
+                
+                document.getElementById('dtProduct').innerText = o.product?.name || '---';
+                document.getElementById('dtOwner').innerText = o.businessOwner?.businessName || '---';
+                document.getElementById('dtQty').innerText = o.quantity + 'x';
+                document.getElementById('dtPrice').innerText = o.price.toLocaleString() + ' ₫';
+                
+                document.getElementById('dtTotal').innerText = o.totalPrice.toLocaleString() + ' ₫';
+                document.getElementById('dtVoucherCode').innerText = o.voucherCode || 'Không';
+                document.getElementById('dtDiscount').innerText = '-' + o.discount.toLocaleString() + ' ₫';
+                document.getElementById('dtFinal').innerText = o.finalPrice.toLocaleString() + ' ₫';
+
+                document.getElementById('orderDetailOverlay').style.display = 'flex';
+            }
+        }
+
+        // --- Product Modal ---
+        window.allProductsData = [];
+        async function loadExpoCatalog() {
+            const r = await fetchExpo('/admin/api/products');
+            if (r && r.success) {
+                window.allProductsData = r.data;
+                const tbody = document.querySelector('#productsTable tbody');
+                tbody.innerHTML = r.data.map(p => `
+                    <tr>
+                        <td>
+                            <div class="product-preview">
+                                <img src="${p.description?.images?.[0] || 'https://placehold.co/100?text=Agri'}" class="product-img">
+                                <div class="product-title">${p.name}</div>
+                            </div>
+                        </td>
+                        <td><span class="booth-pill" style="background:#f1f5f9;">${p.businessField}</span></td>
+                        <td style="font-weight: 700;">${p.pricing?.baseCost?.toLocaleString() || 0} ₫</td>
+                        <td style="color: var(--primary); font-weight: 800;">Còn: ${p.pricing?.stock ?? '∞'}</td>
+                        <td>
+                            <button class="action-btn" onclick="openProductModal('${p._id}')">✏️</button>
+                            <button class="action-btn" onclick="delExpo('products', '${p._id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function openProductModal(id = null) {
+            document.getElementById('productForm').reset();
+            if (allBusinessOwners.length === 0) fetchOwners();
+            
+            if (id) {
+                const p = window.allProductsData.find(x => x._id === id);
+                if (p) {
+                    document.getElementById('productModalTitle').innerText = 'Chỉnh sửa Sản phẩm';
+                    document.getElementById('productId').value = p._id;
+                    document.getElementById('pName').value = p.name;
+                    document.getElementById('pOwner').value = p.businessOwnerId._id;
+                    document.getElementById('pType').value = p.type;
+                    document.getElementById('pField').value = p.businessField;
+                    document.getElementById('pPrice').value = p.pricing?.baseCost || 0;
+                    document.getElementById('pStock').value = p.pricing?.stock !== undefined ? p.pricing.stock : '';
+                    document.getElementById('pDesc').value = p.description?.general || '';
+                    document.getElementById('pImg').value = p.description?.images?.[0] || '';
+                }
+            } else {
+                document.getElementById('productModalTitle').innerText = 'Thêm Sản phẩm';
+                document.getElementById('productId').value = '';
+            }
+            document.getElementById('productOverlay').style.display = 'flex';
+        }
+
+        async function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('productId').value;
+            const payload = {
+                name: document.getElementById('pName').value,
+                businessOwnerId: document.getElementById('pOwner').value,
+                type: document.getElementById('pType').value,
+                businessField: document.getElementById('pField').value,
+                pricing: {
+                    baseCost: document.getElementById('pPrice').value,
+                    stock: document.getElementById('pStock').value ? parseInt(document.getElementById('pStock').value) : null
+                },
+                description: {
+                    general: document.getElementById('pDesc').value,
+                    images: document.getElementById('pImg').value ? [document.getElementById('pImg').value] : []
+                }
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/admin/api/products/${id}` : '/admin/api/products';
+            const r = await fetchExpo(url, method, payload);
+            if (r && r.success) {
+                notify(id ? 'Cập nhật thành công!' : 'Đã thêm sản phẩm mới!');
+                closeModal('productOverlay');
+                loadExpoCatalog();
+            }
+        }
+
+        // --- Voucher Modal ---
+        window.allVouchersData = [];
+        async function loadExpoVouchers() {
+            const r = await fetchExpo('/admin/api/vouchers');
+            if (r && r.success) {
+                window.allVouchersData = r.data;
+                const tbody = document.querySelector('#vouchersTable tbody');
+                tbody.innerHTML = r.data.map(v => `
+                    <tr>
+                        <td><code style="font-weight: 800; background: #fdf2f8; padding: 4px 8px; border-radius: 6px; color: #be185d;">${v.code}</code></td>
+                        <td style="font-weight: 700;">${v.name}</td>
+                        <td style="color: var(--accent); font-weight: 800;">${v.discountType === 'percentage' ? '-' + v.discountValue + '%' : '-' + v.discountValue.toLocaleString() + ' ₫'}</td>
+                        <td style="font-size: 0.8rem;">${v.validUntil ? new Date(v.validUntil).toLocaleDateString('vi-VN') : 'Mãi mãi'}</td>
+                        <td style="font-weight: 700;">${v.usageCount || 0} lần</td>
+                        <td>
+                            <button class="action-btn" onclick="openVoucherModal('${v._id}')">✏️</button> 
+                            <button class="action-btn" onclick="delExpo('vouchers', '${v._id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function openVoucherModal(id = null) {
+            document.getElementById('voucherForm').reset();
+            if (id) {
+                const v = window.allVouchersData.find(x => x._id === id);
+                if (v) {
+                    document.getElementById('voucherModalTitle').innerText = 'Chỉnh sửa Voucher';
+                    document.getElementById('voucherId').value = v._id;
+                    document.getElementById('vCode').value = v.code;
+                    document.getElementById('vName').value = v.name;
+                    document.getElementById('vType').value = v.discountType;
+                    document.getElementById('vValue').value = v.discountValue;
+                    document.getElementById('vMin').value = v.minimumOrder || 0;
+                    document.getElementById('vLimit').value = v.usageLimit || '';
+                }
+            } else {
+                document.getElementById('voucherModalTitle').innerText = 'Tạo Voucher mới';
+                document.getElementById('voucherId').value = '';
+            }
+            document.getElementById('voucherOverlay').style.display = 'flex';
+        }
+
+        async function saveVoucher(e) {
+            e.preventDefault();
+            const id = document.getElementById('voucherId').value;
+            const limit = document.getElementById('vLimit').value;
+            const payload = {
+                code: document.getElementById('vCode').value.toUpperCase(),
+                name: document.getElementById('vName').value,
+                discountType: document.getElementById('vType').value,
+                discountValue: document.getElementById('vValue').value,
+                minimumOrder: document.getElementById('vMin').value || 0
+            };
+            if (limit) payload.usageLimit = parseInt(limit);
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/admin/api/vouchers/${id}` : '/admin/api/vouchers';
+            const r = await fetchExpo(url, method, payload);
+            if (r && r.success) {
+                notify(id ? 'Voucher đã cập nhật!' : 'Voucher mới đã sẵn sàng!');
+                closeModal('voucherOverlay');
+                loadExpoVouchers();
+            } else if (r && !r.success) {
+                alert(r.message || 'Lỗi khi lưu voucher');
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
         function translate(s) {
             const m = { pending: 'Chờ chốt đơn', confirmed: 'Đã xác nhận', processing: 'Đang chuẩn bị', shipped: 'Đang giao', delivered: 'Đã bàn giao', cancelled: 'Đã hủy' };
             return m[s] || s;
@@ -872,6 +1314,7 @@
 
         document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.removeItem('adminToken'); window.location.href = '/admin/login'; });
 
+        fetchOwners(); // Preload owners
         loadData('overview');
     </script>
 </body>

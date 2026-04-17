@@ -402,6 +402,40 @@
             box-shadow: 0 10px 20px rgba(21, 128, 61, 0.2);
         }
 
+        /* Out-of-stock state */
+        .btn-out-of-stock {
+            background: #f1f5f9 !important;
+            color: #94a3b8 !important;
+            border: 2px dashed #cbd5e1 !important;
+            box-shadow: none !important;
+            cursor: not-allowed !important;
+            transform: none !important;
+            opacity: 0.8;
+        }
+
+        .btn-add-cart-disabled {
+            background: #f1f5f9 !important;
+            color: #94a3b8 !important;
+            border: 2px dashed #cbd5e1 !important;
+            cursor: not-allowed !important;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .out-of-stock-banner {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: 1.5px solid #fca5a5;
+            color: #b91c1c;
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
         /* Responsive */
         @media (max-width: 900px) {
             .product-grid {
@@ -461,6 +495,9 @@
 
                     <div class="price-box">
                         <span id="priceValue">0</span><span>VND</span>
+                        <div id="stockInfo" style="margin-left: auto; font-size: 1rem; font-weight: 600; color: var(--text-muted); background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">
+                            Kho: <span id="stockValue">0</span>
+                        </div>
                     </div>
 
                     <p class="desc" id="productDesc">
@@ -484,8 +521,17 @@
                         </div>
                     </div>
 
+                    <!-- Out-of-stock banner (hidden by default, shown by JS) -->
+                    <div class="out-of-stock-banner" id="outOfStockBanner" style="display: none;">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        </svg>
+                        Sản phẩm này hiện đã hết hàng, không thể thêm vào giỏ hoặc đặt mua.
+                    </div>
+
                     <div style="display: flex; gap: 15px;">
-                        <button class="btn-order" onclick="openOrderModal(false)" style="flex: 1;">
+                        <button class="btn-order" id="btnOrderNow" onclick="openOrderModal(false)" style="flex: 1;">
                             <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
@@ -493,9 +539,9 @@
                             </svg>
                             ĐẶT NGAY
                         </button>
-                        <button onclick="addToCart()"
+                        <button id="btnAddCart" onclick="addToCart()"
                             style="background: #f8fafc; color: var(--secondary); border: 2px solid #e2e8f0; padding: 20px 30px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;"
-                            onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f8fafc'">
+                            onmouseover="if(!this.disabled) this.style.background='#e2e8f0'" onmouseout="if(!this.disabled) this.style.background='#f8fafc'">
                             <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
@@ -570,9 +616,13 @@
                         <input type="text" id="district" class="form-control" required placeholder="Tên quận/huyện">
                     </div>
                     <div class="form-group" id="qtyGroup">
-                        <label>Số lượng</label>
+                        <label style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>Số lượng</span>
+                            <span id="stockHint" style="font-size:0.8rem; color:#64748b; font-weight:500;"></span>
+                        </label>
                         <input type="number" id="quantity" class="form-control" value="1" min="1" required
-                            oninput="updateTotal()">
+                            oninput="validateQty(this); updateTotal()">
+                        <div id="qtyWarning" style="font-size:0.8rem; color:#ef4444; margin-top:4px; display:none;"></div>
                     </div>
                 </div>
 
@@ -654,6 +704,7 @@
         const productId = "<%= productId %>";
         const defaultImage = '/uploads/products-services/default-product.png';
         let productPrice = 0;
+        let productIsOutOfStock = false; // Track out-of-stock state
 
         async function fetchProductDetails() {
             try {
@@ -760,11 +811,65 @@
             productPrice = product.pricing?.baseCost || product.booking?.totalPrice || 0;
             document.getElementById('priceValue').innerText = productPrice.toLocaleString('vi-VN');
 
-            // Order Form Setup
+            // Stock Info
+            const stock = product.pricing?.stock ?? 'N/A';
+            const stockValueSpan = document.getElementById('stockValue');
+            const btnOrderNow = document.getElementById('btnOrderNow');
+            const btnAddCart = document.getElementById('btnAddCart');
+
+            if (stock !== 'N/A') {
+                stockValueSpan.innerText = stock;
+                if (stock <= 0) {
+                    productIsOutOfStock = true;
+
+                    // Style stock badge
+                    stockValueSpan.parentElement.style.color = '#ef4444';
+                    stockValueSpan.parentElement.style.background = '#fef2f2';
+
+                    // Show out-of-stock banner
+                    document.getElementById('outOfStockBanner').style.display = 'flex';
+
+                    // Disable "Đặt ngay" button
+                    btnOrderNow.disabled = true;
+                    btnOrderNow.classList.add('btn-out-of-stock');
+                    btnOrderNow.innerHTML = `
+                        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        </svg>
+                        HẾT HÀNG`;
+
+                    // Disable "Thêm giỏ" button
+                    btnAddCart.disabled = true;
+                    btnAddCart.classList.add('btn-add-cart-disabled');
+                    btnAddCart.innerHTML = `
+                        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+                        </svg>
+                        KHÔNG CÓ`;
+                }
+            } else {
+                document.getElementById('stockInfo').style.display = 'none';
+            }
+
+            // Order Form Setup - giới hạn số lượng theo tồn kho
+            const qtyInput = document.getElementById('quantity');
+            if (stock !== 'N/A' && stock > 0) {
+                qtyInput.max = stock;
+                qtyInput.min = 1;
+                qtyInput.value = 1;
+                // Hiện hint tồn kho kế bên label
+                const stockHint = document.getElementById('stockHint');
+                if (stockHint) stockHint.textContent = `(Còn ${stock} trong kho)`;
+            } else if (stock !== 'N/A' && stock <= 0) {
+                qtyInput.max = 0;
+                qtyInput.value = 0;
+            }
+
             document.getElementById('orderProductId').value = product._id;
             document.getElementById('orderPrice').value = productPrice;
-            document.getElementById('quantity').value = 1; // Reset quantity
-            updateTotal(); // Calculate initial total
+            updateTotal();
 
             // Images
             const images = product.description?.images || [];
@@ -803,6 +908,78 @@
         let appliedVoucherCode = '';
         let isCartCheckout = false;
         let cart = JSON.parse(localStorage.getItem('tvad_cart') || '[]');
+        let currentStock = null; // lưu tồn kho hiện tại
+
+        // Validate số lượng không vượt quá tồn kho
+        function validateQty(input) {
+            const val = parseInt(input.value) || 1;
+            const max = parseInt(input.max);
+            const warning = document.getElementById('qtyWarning');
+            if (!isNaN(max) && max > 0 && val > max) {
+                input.value = max;
+                if (warning) {
+                    warning.textContent = `⚠ Chỉ còn ${max} sản phẩm trong kho, số lượng đã được điều chỉnh.`;
+                    warning.style.display = 'block';
+                    setTimeout(() => warning.style.display = 'none', 3000);
+                }
+            } else if (val < 1) {
+                input.value = 1;
+            }
+            updateTotal();
+        }
+
+        // Cập nhật UI tồn kho real-time sau khi đặt hàng (không cần reload)
+        function updateStockUI(newStock) {
+            currentStock = newStock;
+            const stockValueSpan = document.getElementById('stockValue');
+            const stockHint = document.getElementById('stockHint');
+            const qtyInput = document.getElementById('quantity');
+            const btnOrderNow = document.getElementById('btnOrderNow');
+            const btnAddCart = document.getElementById('btnAddCart');
+            const outOfStockBanner = document.getElementById('outOfStockBanner');
+
+            if (newStock !== null) {
+                // Cập nhật số liệu hiển thị
+                if (stockValueSpan) stockValueSpan.innerText = newStock;
+                if (stockHint) stockHint.textContent = newStock > 0 ? `(Còn ${newStock} trong kho)` : '(Hết hàng)';
+
+                // Cập nhật max của input số lượng
+                if (qtyInput) {
+                    qtyInput.max = newStock;
+                    if (newStock > 0 && parseInt(qtyInput.value) > newStock) {
+                        qtyInput.value = newStock;
+                    }
+                }
+
+                if (newStock <= 0) {
+                    // Vừa hết hàng → disable các nút
+                    productIsOutOfStock = true;
+
+                    if (stockValueSpan) {
+                        stockValueSpan.parentElement.style.color = '#ef4444';
+                        stockValueSpan.parentElement.style.background = '#fef2f2';
+                    }
+                    if (outOfStockBanner) outOfStockBanner.style.display = 'flex';
+
+                    if (btnOrderNow) {
+                        btnOrderNow.disabled = true;
+                        btnOrderNow.classList.add('btn-out-of-stock');
+                        btnOrderNow.innerHTML = `<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg> HẾT HÀNG`;
+                    }
+                    if (btnAddCart) {
+                        btnAddCart.disabled = true;
+                        btnAddCart.classList.add('btn-add-cart-disabled');
+                        btnAddCart.innerHTML = `<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg> KHÔNG CÓ`;
+                    }
+                } else {
+                    // Vẫn còn hàng - cập nhật màu xanh
+                    if (stockValueSpan) {
+                        stockValueSpan.parentElement.style.color = '#16a34a';
+                        stockValueSpan.parentElement.style.background = '#f0fdf4';
+                    }
+                }
+            }
+        }
 
         function saveCart() {
             localStorage.setItem('tvad_cart', JSON.stringify(cart));
@@ -810,6 +987,12 @@
         }
 
         function addToCart() {
+            // Block add to cart if out of stock
+            if (productIsOutOfStock) {
+                alert('⚠️ Sản phẩm này đã hết hàng, không thể thêm vào giỏ!');
+                return;
+            }
+
             const existing = cart.find(i => i.productId === productId);
             if (existing) {
                 existing.quantity += parseInt(document.getElementById('quantity').value) || 1;
@@ -997,19 +1180,35 @@
         async function submitOrder(e) {
             e.preventDefault();
 
+            // Client-side: kiểm tra số lượng không vượt quá tồn kho
+            const qtyInput = document.getElementById('quantity');
+            const orderedQty = parseInt(qtyInput.value) || 1;
+            if (qtyInput.max && parseInt(qtyInput.max) > 0 && orderedQty > parseInt(qtyInput.max)) {
+                alert(`⚠️ Số lượng vượt quá tồn kho! Chỉ còn ${qtyInput.max} sản phẩm.`);
+                qtyInput.value = qtyInput.max;
+                updateTotal();
+                return;
+            }
+
+            // Disable nút submit để tránh bấm nhiều lần
+            const submitBtn = document.querySelector('#orderForm .btn-submit');
+            const originalBtnText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Đang xử lý...';
+
             const commonPayload = {
                 customerName: document.getElementById('customerName').value,
                 customerEmail: document.getElementById('customerEmail').value,
                 customerPhone: document.getElementById('customerPhone').value,
                 address: document.getElementById('address').value,
                 district: document.getElementById('district').value,
-                city: 'Tỉnh/TP', // Default or can add a select field
+                city: 'Tỉnh/TP',
                 voucherCode: appliedVoucherCode || undefined
             };
 
             const postItems = isCartCheckout
                 ? cart.map(i => ({ ...commonPayload, productId: i.productId, quantity: i.quantity }))
-                : [{ ...commonPayload, productId: document.getElementById('orderProductId').value, quantity: parseInt(document.getElementById('quantity').value) || 1 }];
+                : [{ ...commonPayload, productId: document.getElementById('orderProductId').value, quantity: orderedQty }];
 
             try {
                 const promises = postItems.map(item => fetch('/api/orders', {
@@ -1024,20 +1223,70 @@
                 const failures = results.filter(r => !r.success);
 
                 if (failures.length === 0) {
-                    alert('🎉 Đặt hàng thành công!');
                     closeOrderModal();
                     document.getElementById('orderForm').reset();
+
+                    // Cập nhật tồn kho real-time từ response (không reload trang)
+                    if (!isCartCheckout) {
+                        const mainResult = results[0];
+                        if (mainResult.newStock !== null && mainResult.newStock !== undefined) {
+                            updateStockUI(mainResult.newStock);
+                        }
+                        // Reset input quantity về 1 hoặc max còn lại
+                        const newMax = mainResult.newStock;
+                        if (newMax !== null && newMax !== undefined) {
+                            qtyInput.max = newMax;
+                            qtyInput.value = newMax > 0 ? 1 : 0;
+                        }
+                    }
+
                     if (isCartCheckout) {
                         cart = [];
                         saveCart();
                     }
+
+                    // Hiện toast thành công thay vì alert
+                    showSuccessToast('🎉 Đặt hàng thành công! Chúng tôi sẽ liên hệ sớm.');
                 } else {
-                    alert('Có lỗi xảy ra với một số sản phẩm: ' + failures.map(f => f.message).join(', '));
+                    alert('Lỗi: ' + failures.map(f => f.message).join('\n'));
                 }
             } catch (err) {
                 console.error('Error submitting order', err);
                 alert('Có lỗi kết nối khi đặt hàng.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalBtnText;
             }
+        }
+
+        // Toast thông báo đặt hàng thành công
+        function showSuccessToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px);
+                background: linear-gradient(135deg, #15803d, #16a34a);
+                color: white; padding: 16px 28px; border-radius: 14px;
+                font-weight: 700; font-size: 1rem; z-index: 9999;
+                box-shadow: 0 15px 40px rgba(21,128,61,0.35);
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                opacity: 0; white-space: nowrap;
+                display: flex; align-items: center; gap: 10px;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(-50%) translateY(0)';
+            }, 50);
+
+            // Animate out
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(-50%) translateY(20px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 4000);
         }
 
         // Start

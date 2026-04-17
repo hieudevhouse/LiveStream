@@ -43,6 +43,15 @@ class OrderController {
 
       // Calculate prices
       const quantityNumber = parseInt(quantity, 10) || 1;
+      
+      // Stock check
+      if (product.pricing?.stock != null && product.pricing.stock < quantityNumber) {
+        return res.status(400).json({
+          success: false,
+          message: `Sản phẩm này chỉ còn ${product.pricing.stock} đơn vị trong kho.`
+        });
+      }
+
       const price = product.pricing?.baseCost || product.booking?.totalPrice || 0;
       const totalPrice = price * quantityNumber;
 
@@ -184,6 +193,17 @@ class OrderController {
 
       await order.save();
 
+      // Decrement stock in ProductService and get new stock value
+      let newStock = null;
+      if (product.pricing?.stock != null) {
+        const updatedProduct = await ProductService.findByIdAndUpdate(
+          productId,
+          { $inc: { 'pricing.stock': -quantityNumber } },
+          { new: true }  // return updated document
+        );
+        newStock = updatedProduct?.pricing?.stock ?? null;
+      }
+
       // Populate for response
       await order.populate('product', 'name businessField');
       await order.populate('businessOwner', 'name email contactPhone');
@@ -192,7 +212,8 @@ class OrderController {
       res.status(201).json({
         success: true,
         message: 'Đặt hàng thành công',
-        data: order
+        data: order,
+        newStock  // trả về tồn kho mới để frontend cập nhật real-time
       });
     } catch (error) {
       console.error('Error creating order:', error);
@@ -430,6 +451,13 @@ class OrderController {
       order.cancelReason = reason;
       await order.save();
 
+      // Hoàn trả stock khi hủy đơn
+      if (order.quantity) {
+        await ProductService.findByIdAndUpdate(order.product, {
+          $inc: { 'pricing.stock': order.quantity }
+        });
+      }
+
       res.json({
         success: true,
         message: 'Đơn hàng đã được hủy',
@@ -444,7 +472,5 @@ class OrderController {
     }
   }
 }
-
-module.exports = new OrderController();
 
 module.exports = new OrderController();

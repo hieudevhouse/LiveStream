@@ -117,6 +117,7 @@ function buildProductServicePayload(productService = {}, businessOwnerId = '', b
     pricing: {
       baseCost: Number.isFinite(baseCost) ? baseCost : 0,
       currency: 'VND',
+      stock: Number(productService.stock) || 0,
     },
     booking: bookingPayload,
     mediaFilesDescription: productService.mediaFilesDescription || '',

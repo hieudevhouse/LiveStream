@@ -319,6 +319,10 @@
               <label for="baseCost_${index}">Giá sản phẩm (VND)</label>
               <input id="baseCost_${index}" name="productServices[${index}][baseCost]" type="number" min="0" step="1000" placeholder="0" required />
             </div>
+            <div class="field">
+              <label for="stock_${index}">Số lượng có sẵn</label>
+              <input id="stock_${index}" name="productServices[${index}][stock]" type="number" min="0" placeholder="0" required />
+            </div>
           </div>
           <div class="field">
             <label for="generalDescription_${index}">Mô tả sản phẩm</label>
@@ -455,11 +459,13 @@
         const productName = card.querySelector('input[name^="productServices"][name$="[productName]"]').value.trim();
         const businessField = card.querySelector('select[name^="productServices"][name$="[businessField]"]').value.trim();
         const baseCost = card.querySelector('input[name^="productServices"][name$="[baseCost]"]').value.trim();
+        const stock = card.querySelector('input[name^="productServices"][name$="[stock]"]').value.trim();
         const generalDescription = card.querySelector('textarea[name^="productServices"][name$="[generalDescription]"]').value.trim();
 
         if (!productName) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập tên sản phẩm`);
         if (!businessField) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập danh mục sản phẩm`);
         if (baseCost === '' || Number(baseCost) < 0) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập giá sản phẩm hợp lệ`);
+        if (stock === '' || Number(stock) < 0) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập số lượng sản phẩm hợp lệ`);
         if (!generalDescription) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập mô tả sản phẩm`);
       }
 
