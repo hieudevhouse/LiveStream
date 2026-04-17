@@ -151,7 +151,7 @@ const submitRegistration = async (req, res) => {
         if (!fileMap.has(file.fieldname)) {
           fileMap.set(file.fieldname, []);
         }
-        fileMap.get(file.fieldname).push('/uploads/products-services/' + file.filename);
+        fileMap.get(file.fieldname).push(file.path);
       });
 
       // Xử lý logo nhãn hàng
