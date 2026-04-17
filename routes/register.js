@@ -9,7 +9,7 @@ const { storage } = require('../config/cloudinary');
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // Tang len 10MB cho Cloudinary
+  limits: { fileSize: 200 * 1024 * 1024 } // Tang len 200MB cho Cloudinary
 });
 
 
