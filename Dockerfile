@@ -1,5 +1,5 @@
-# Use Node.js 18 Alpine image for smaller size
-FROM node:18-alpine
+# Use Node.js 18 slim (Debian-based) to resolve onnxruntime-node/glibc compatibility issues
+FROM node:18-slim
 
 # Set working directory
 WORKDIR /app
@@ -16,13 +16,9 @@ COPY . .
 # Create uploads directory
 RUN mkdir -p uploads/products-services
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
-
-# Change ownership of the app directory
-RUN chown -R nodejs:nodejs /app
-USER nodejs
+# Change ownership of the app directory to default pre-existing 'node' user
+RUN chown -R node:node /app
+USER node
 
 EXPOSE 5002
 
