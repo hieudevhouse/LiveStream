@@ -151,7 +151,6 @@ orderSchema.pre('save', function(next) {
 
 // Index for efficient queries
 orderSchema.index({ customerEmail: 1, createdAt: -1 });
-orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ businessOwner: 1 });
 

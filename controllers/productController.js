@@ -127,12 +127,15 @@ class ProductController {
       }
 
       // Get related products from same business
-      const relatedProducts = await ProductService.find({
-        businessOwnerId: product.businessOwnerId._id,
-        _id: { $ne: product._id }
-      })
-        .limit(4)
-        .select('name businessField description.general description.images');
+      let relatedProducts = [];
+      if (product.businessOwnerId) {
+        relatedProducts = await ProductService.find({
+          businessOwnerId: product.businessOwnerId._id,
+          _id: { $ne: product._id }
+        })
+          .limit(4)
+          .select('name businessField description.general description.images');
+      }
 
       res.json({
         success: true,

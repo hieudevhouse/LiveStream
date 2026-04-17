@@ -64,7 +64,6 @@ businessOwnerSchema.pre('save', function(next) {
   this.updatedAt = new Date();
   next();
 });
-businessOwnerSchema.index({ userId: 1 }, { unique: true });
 businessOwnerSchema.index({ taxCode: 1 });
 businessOwnerSchema.index({ email: 1 });
 businessOwnerSchema.index({ individualEmail: 1 });
