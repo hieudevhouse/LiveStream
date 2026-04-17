@@ -58,16 +58,12 @@ const startServer = async () => {
     await connectDB();
     await connectLakehouseDB();
 
-    // Khởi động các service chạy nền nếu không phải môi trường Vercel (Serverless)
-    if (!process.env.VERCEL) {
-      lakeIngestion.startCron();
-      
-      app.listen(PORT, '0.0.0.0', () => {
-        console.log(`✅ Server is running locally on port ${PORT}`);
-      });
-    } else {
-      console.log('🚀 App initialized for Vercel Serverless environment');
-    }
+    // Khởi động cron job cho lakehouse ingestion
+    lakeIngestion.startCron();
+    
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✅ Server is running on port ${PORT}`);
+    });
 
   } catch (err) {
     console.error('❌ Failed to start server due to db error', err);
@@ -86,6 +82,3 @@ app.use((error, req, res, next) => {
     message: error.message || 'Internal Server Error'
   });
 });
-
-// Export cho Vercel
-module.exports = app;
