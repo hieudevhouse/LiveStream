@@ -1,35 +1,20 @@
-# Use Node.js 18 Alpine image for smaller size
-FROM node:18-alpine
+# Sử dụng Node.js LTS chính thức làm base image
+FROM node:20-slim
 
-# Set working directory
-WORKDIR /app
+# Tạo thư mục làm việc trong container
+WORKDIR /usr/src/app
 
-# Copy package files
+# Sao chép package.json và package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --only=production
+# Cài đặt các dependencies (bao gồm cả devDependencies nếu cần thiết cho build)
+RUN npm install
 
-# Copy source code
+# Sao chép toàn bộ mã nguồn vào container
 COPY . .
 
-# Create uploads directory
-RUN mkdir -p uploads/products-services
+# Mở cổng mà ứng dụng sử dụng (dựa trên server chạy port 5002)
+EXPOSE 5002
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
-
-# Change ownership of the app directory
-RUN chown -R nodejs:nodejs /app
-USER nodejs
-
-# Expose port
-EXPOSE 5000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node healthcheck.js
-
-# Start the application
+# Chạy ứng dụng
 CMD ["npm", "start"]

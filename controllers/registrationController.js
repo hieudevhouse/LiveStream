@@ -1,7 +1,8 @@
-﻿const authService = require('../services/auth.service');
+const authService = require('../services/auth.service');
 const businessOwnerService = require('../services/businessOwner.service');
 const productServiceService = require('../services/productService.service');
 const collaborationNeedService = require('../services/collaborationNeed.service');
+const Voucher = require('../models/Voucher');
 
 function parseKeywords(rawKeywords) {
   if (!rawKeywords) return [];
@@ -119,6 +120,15 @@ function buildProductServicePayload(productService = {}, businessOwnerId = '', b
     },
     booking: bookingPayload,
     mediaFilesDescription: productService.mediaFilesDescription || '',
+    vouchers: Array.isArray(productService.vouchers) 
+      ? productService.vouchers.filter(v => v.code).map(v => ({
+          code: v.code,
+          quantity: Number(v.quantity) || 0,
+          startDate: v.startDate ? new Date(v.startDate) : null,
+          expiryDate: v.expiryDate ? new Date(v.expiryDate) : null,
+          value: Number(v.value) || 0
+        }))
+      : []
   };
 }
 
@@ -192,7 +202,33 @@ const submitRegistration = async (req, res) => {
     for (const item of productServiceEntries) {
       const payload = buildProductServicePayload(item, businessOwner._id.toString(), bookingPayload);
       const createResult = await productServiceService.create(payload);
-      createdProductServices.push(createResult.productService);
+      const newProduct = createResult.productService;
+      createdProductServices.push(newProduct);
+
+      // Cập nhật vào bảng Voucher (standalone)
+      if (newProduct.vouchers && newProduct.vouchers.length > 0) {
+        for (const v of newProduct.vouchers) {
+          try {
+            await Voucher.findOneAndUpdate(
+              { code: v.code.toUpperCase() },
+              {
+                code: v.code.toUpperCase(),
+                name: `Voucher cho ${newProduct.name}`,
+                discountType: 'fixed',
+                discountValue: v.value,
+                usageLimit: v.quantity,
+                validFrom: v.startDate,
+                validUntil: v.expiryDate,
+                applicableProduct: newProduct._id,
+                isActive: true
+              },
+              { upsert: true, new: true }
+            );
+          } catch (vErr) {
+            console.error(`Lỗi khi cập nhật bảng Voucher cho mã ${v.code}:`, vErr.message);
+          }
+        }
+      }
     }
     const createdProductService = createdProductServices[0];
 

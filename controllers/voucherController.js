@@ -1,15 +1,42 @@
 const Voucher = require('../models/Voucher');
+const ProductService = require('../models/ProductService');
+const Order = require('../models/Order');
 
 class VoucherController {
   // Validate voucher code
   async validateVoucher(req, res) {
     try {
-      const { code, orderTotal } = req.body;
+      const { code, orderTotal, productId } = req.body;
+      const normalizedCode = code.toUpperCase();
 
-      const voucher = await Voucher.findOne({
-        code: code.toUpperCase(),
+      // 1. Check Global Vouchers
+      let voucher = await Voucher.findOne({
+        code: normalizedCode,
         isActive: true
       });
+
+      // 2. If not found and productId is provided, check Product Specific Vouchers
+      let source = 'global';
+      if (!voucher && productId) {
+        const product = await ProductService.findById(productId);
+        if (product && product.vouchers && product.vouchers.length > 0) {
+          const productVoucher = product.vouchers.find(v => v.code === normalizedCode);
+          if (productVoucher) {
+            voucher = {
+              code: productVoucher.code,
+              name: 'Khuyến mãi sản phẩm',
+              discountType: 'fixed', // Default for product-embedded vouchers
+              discountValue: productVoucher.value,
+              usageLimit: productVoucher.quantity,
+              usageCount: 0, // We'll need a better way to track this if it gets complex
+              validFrom: productVoucher.startDate,
+              validUntil: productVoucher.expiryDate,
+              minimumOrder: 0
+            };
+            source = 'product';
+          }
+        }
+      }
 
       if (!voucher) {
         return res.status(404).json({
@@ -18,14 +45,40 @@ class VoucherController {
         });
       }
 
-      // Check if voucher is still valid
-      if (voucher.validUntil && new Date() > voucher.validUntil) {
+      // Check if user already used this specific voucher code
+      if (req.body.customerEmail) {
+        const existingOrder = await Order.findOne({
+          customerEmail: req.body.customerEmail.toLowerCase(),
+          voucherCode: normalizedCode,
+          status: { $ne: 'cancelled' }
+        });
+        if (existingOrder) {
+          return res.status(400).json({
+            success: false,
+            message: 'Bạn đã sử dụng mã voucher này rồi'
+          });
+        }
+      }
+
+      // Check if voucher is still valid (Start Date)
+      const now = new Date();
+      const validFrom = voucher.validFrom || voucher.startDate;
+      if (validFrom && now < new Date(validFrom)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Voucher chưa đến thời gian áp dụng'
+        });
+      }
+
+      // Check if voucher is still valid (Expiry Date)
+      if (voucher.validUntil && now > new Date(voucher.validUntil)) {
         return res.status(400).json({
           success: false,
           message: 'Voucher đã hết hạn'
         });
       }
 
+      // Check Usage Limit
       if (voucher.usageLimit && voucher.usageCount >= voucher.usageLimit) {
         return res.status(400).json({
           success: false,
@@ -33,7 +86,8 @@ class VoucherController {
         });
       }
 
-      if (orderTotal < voucher.minimumOrder) {
+      // Check Minimum Order
+      if (orderTotal < (voucher.minimumOrder || 0)) {
         return res.status(400).json({
           success: false,
           message: `Tổng tiền tối thiểu phải từ ${voucher.minimumOrder.toLocaleString()} VND`
@@ -57,9 +111,10 @@ class VoucherController {
         data: {
           code: voucher.code,
           name: voucher.name,
-          discountType: voucher.discountType,
+          discountType: voucher.discountType || 'fixed',
           discountValue: voucher.discountValue,
-          discount: Math.round(discount)
+          discount: Math.round(discount),
+          source
         }
       });
     } catch (error) {

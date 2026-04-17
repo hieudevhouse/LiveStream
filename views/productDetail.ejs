@@ -924,11 +924,12 @@
                 return;
             }
 
+            const email = document.getElementById('customerEmail').value.trim();
             try {
                 const res = await fetch('/api/vouchers/validate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code, orderTotal: subtotal })
+                    body: JSON.stringify({ code, orderTotal: subtotal, productId, customerEmail: email })
                 });
                 const data = await res.json();
 
@@ -1045,6 +1046,7 @@
             renderCartUI();
         });
 
+        fetchProductDetails();
     </script>
 </body>
 

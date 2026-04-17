@@ -95,6 +95,9 @@
     .popup-card p { margin: 0 0 24px; color: #475569; line-height: 1.7; }
     .popup-card .btn { width: 100%; }
     .popup-close { position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; border: none; background: transparent; color: #64748b; font-size: 1.2rem; cursor: pointer; }
+    .voucher-section { margin-top: 24px; padding-top: 20px; border-top: 1px dashed #e2e8f0; }
+    .voucher-title { font-size: 1rem; font-weight: 700; color: #1e40af; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .voucher-title i { font-style: normal; }
     .hidden { display: none !important; }
     @media (max-width: 1024px) { .hero { grid-template-columns: 1fr; } .content-grid { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } .summary-grid { grid-template-columns: 1fr; } .steps { grid-template-columns: 1fr; } }
   </style>
@@ -348,6 +351,35 @@
             <label for="productImages_${index}">Upload hình ảnh sản phẩm</label>
             <input id="productImages_${index}" name="productServices[${index}][images]" type="file" multiple accept="image/*" />
             <small style="color: #64748b; margin-top: 8px; display: block;">JPG, PNG hoặc GIF. Tối đa 5MB mỗi ảnh.</small>
+          </div>
+          <div class="voucher-section">
+            <div class="voucher-title">🎟️ Chương trình Voucher / Khuyến mãi</div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="voucherCode_${index}">Mã Voucher</label>
+                <input id="voucherCode_${index}" name="productServices[${index}][vouchers][0][code]" type="text" placeholder="Ví dụ: DREAMAX2024" />
+              </div>
+              <div class="field">
+                <label for="voucherValue_${index}">Giá trị voucher (VND)</label>
+                <input id="voucherValue_${index}" name="productServices[${index}][vouchers][0][value]" type="number" min="0" placeholder="0" />
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="field">
+                <label for="voucherQuantity_${index}">Số lượng</label>
+                <input id="voucherQuantity_${index}" name="productServices[${index}][vouchers][0][quantity]" type="number" min="0" placeholder="Số lượng phát hành" />
+              </div>
+              <div class="grid-2">
+                <div class="field">
+                  <label for="voucherStart_${index}">Ngày bắt đầu</label>
+                  <input id="voucherStart_${index}" name="productServices[${index}][vouchers][0][startDate]" type="date" />
+                </div>
+                <div class="field">
+                  <label for="voucherExpiry_${index}">Ngày hết hạn</label>
+                  <input id="voucherExpiry_${index}" name="productServices[${index}][vouchers][0][expiryDate]" type="date" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       `;
