@@ -68,7 +68,7 @@ const startServer = async () => {
     console.error('❌ Failed to start server due to db error', err);
   }
 };
-
+//
 startServer();
 
 // Error handler
@@ -76,7 +76,7 @@ app.use((error, req, res, next) => {
   if (error.name === 'MulterError' && error.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({ message: 'File too large' });
   }
-
+console.error('❌ Server error:', error);
   res.status(500).json({
     message: error.message || 'Internal Server Error'
   });
