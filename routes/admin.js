@@ -70,13 +70,25 @@ router.post('/api/login', async (req, res) => {
     }
 });
 
-// GET /admin/api/stats
-router.get('/api/stats', authAdmin, async (req, res) => {
+// GET /admin/api/dashboard-stats
+router.get('/api/dashboard-stats', authAdmin, async (req, res) => {
     try {
         const productCount = await ProductService.countDocuments();
         const voucherCount = await Voucher.countDocuments();
         const orderCount = await Order.countDocuments();
-        res.json({ success: true, data: { productCount, voucherCount, orderCount } });
+        
+        // Pass to controller for chart data
+        const stats = await require('../controllers/orderController').getDashboardStatsInternal();
+        
+        res.json({
+            success: true,
+            data: {
+                productCount,
+                voucherCount,
+                orderCount,
+                ...stats
+            }
+        });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
     }

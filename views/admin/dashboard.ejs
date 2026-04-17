@@ -13,6 +13,8 @@
         rel="stylesheet">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root {
@@ -495,7 +497,8 @@
             }
         }
 
-        select, .form-input {
+        select,
+        .form-input {
             width: 100%;
             padding: 12px;
             border-radius: 10px;
@@ -506,7 +509,8 @@
             font-family: inherit;
         }
 
-        .form-input:focus, select:focus {
+        .form-input:focus,
+        select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.1);
         }
@@ -559,7 +563,10 @@
             cursor: pointer;
             color: #94a3b8;
         }
-        .close-btn:hover { color: #ef4444; }
+
+        .close-btn:hover {
+            color: #ef4444;
+        }
 
         /* Order Details Styles */
         .order-detail-card {
@@ -568,6 +575,7 @@
             padding: 16px;
             margin-bottom: 16px;
         }
+
         .order-detail-header {
             font-weight: 700;
             color: var(--primary);
@@ -575,14 +583,22 @@
             font-size: 0.9rem;
             text-transform: uppercase;
         }
+
         .detail-row {
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
             font-size: 0.95rem;
         }
-        .detail-row span:first-child { color: var(--text-muted); }
-        .detail-row span:last-child { font-weight: 600; text-align: right; }
+
+        .detail-row span:first-child {
+            color: var(--text-muted);
+        }
+
+        .detail-row span:last-child {
+            font-weight: 600;
+            text-align: right;
+        }
     </style>
 </head>
 
@@ -662,35 +678,134 @@
                     </div>
                 </div>
 
-                <div class="expo-container">
-                    <div class="expo-header">
-                        <h3>Các giao dịch vừa chốt tại quầy</h3>
-                        <div style="display: flex; gap: 12px; align-items: center;">
-                            <select id="recentStatusFilter" onchange="filterRecentOrders()" style="padding: 8px 12px; font-size: 0.85rem; width: auto;">
-                                <option value="">Tất cả trạng thái</option>
-                                <option value="pending">Chờ chốt đơn</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="processing">Đang chuẩn bị</option>
-                                <option value="shipped">Đang Vận chuyển</option>
-                                <option value="delivered">Đã bàn giao</option>
-                                <option value="cancelled">Đã hủy</option>
-                            </select>
-                            <button class="action-btn" onclick="loadAllTransactions()">🔄</button>
+                <div class="expo-container"
+                    style="background: transparent; padding: 0; box-shadow: none; margin-top: 24px;">
+                    <!-- Row 1: Revenue & Status -->
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 24px;">
+                        <div
+                            style="background: white; border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                                <h3 style="color: var(--secondary); display: flex; align-items: center; gap: 10px;">📈
+                                    Doanh thu Hôm nay (Theo giờ)</h3>
+                                <div
+                                    style="font-size: 0.85rem; color: var(--text-muted); padding: 4px 12px; background: #f0fdf4; border-radius: 99px; color: var(--primary); font-weight: 700;">
+                                    Live Update</div>
+                            </div>
+                            <div style="height: 300px;">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                        <div
+                            style="background: white; border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                            <h3
+                                style="margin-bottom: 24px; color: var(--secondary); display: flex; align-items: center; gap: 10px;">
+                                📊 Trạng thái Đơn hàng</h3>
+                            <div style="height: 300px; display: flex; align-items: center; justify-content: center;">
+                                <canvas id="statusChart"></canvas>
+                            </div>
                         </div>
                     </div>
-                    <table class="expo-table" id="recentOrdersTable">
-                        <thead>
-                            <tr>
-                                <th>Khách tham quan</th>
-                                <th>Tổng thanh toán</th>
-                                <th>Trạng thái</th>
-                                <th>Giờ chốt</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                    <div id="recentOrdersPagination" style="padding: 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;"></div>
+
+                    <!-- Row 2: Top Products & Gift Ratio -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                        <div
+                            style="background: white; border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                            <h3
+                                style="margin-bottom: 24px; color: var(--secondary); display: flex; align-items: center; gap: 10px;">
+                                🏆 Top 5 Sản phẩm Bán chạy</h3>
+                            <div style="height: 300px;">
+                                <canvas id="topProductsChart"></canvas>
+                            </div>
+                        </div>
+                        <div
+                            style="background: white; border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                            <h3
+                                style="margin-bottom: 24px; color: var(--secondary); display: flex; align-items: center; gap: 10px;">
+                                💎 Đại gia mua sắm (Hôm nay)</h3>
+                            <div id="topBuyersList" style="display: flex; flex-direction: column; gap: 16px;">
+                                <!-- Dữ liệu từ JS -->
+                                <div style="text-align: center; color: var(--text-muted); padding: 50px;">Đang tính toán
+                                    dữ liệu khách hàng...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Gift Ratio & Other Info -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                        <div
+                            style="background: white; border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                            <h3
+                                style="margin-bottom: 24px; color: var(--secondary); display: flex; align-items: center; gap: 10px;">
+                                🎁 Tỉ lệ Quà tặng / Sản phẩm</h3>
+                            <div style="height: 250px; display: flex; align-items: center; justify-content: center;">
+                                <canvas id="ratioChart"></canvas>
+                            </div>
+                        </div>
+                        <div
+                            style="background: var(--primary); color: white; border-radius: var(--radius); padding: 40px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden;">
+                            <h2 style="font-size: 2rem; margin-bottom: 15px; position: relative; z-index: 1;">Dreamax
+                                Expo 2026</h2>
+                            <p style="opacity: 0.9; position: relative; z-index: 1;">Kỹ thuật số hóa ngành nông nghiệp
+                                Việt Nam vươn tầm thế giới.</p>
+                            <div
+                                style="position: absolute; right: -20px; bottom: -20px; font-size: 8rem; opacity: 0.1;">
+                                🎋</div>
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Recent Transactions (Restored & Improved) -->
+                    <div
+                        style="background: white; border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+                            <h3 style="color: var(--secondary); display: flex; align-items: center; gap: 10px;">🕒 Giao
+                                dịch Gần nhất</h3>
+
+                            <div
+                                style="display: flex; gap: 12px; align-items: center; flex: 1; min-width: 300px; justify-content: flex-end;">
+                                <div style="position: relative; flex: 1; max-width: 400px;">
+                                    <input type="text" id="recentSearchInput" onkeyup="searchRecentOrders()"
+                                        placeholder="Tìm tên, SĐT, hoặc mặt hàng..."
+                                        style="width: 100%; padding: 10px 15px 10px 40px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.9rem;">
+                                    <span style="position: absolute; left: 15px; top: 10px; opacity: 0.5;">🔍</span>
+                                </div>
+
+                                <select id="recentStatusFilter" onchange="filterRecentOrders()"
+                                    style="padding: 10px 12px; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 10px;">
+                                    <option value="">Trạng thái: Tất cả</option>
+                                    <option value="pending">Chờ chốt</option>
+                                    <option value="confirmed">Xác nhận</option>
+                                    <option value="processing">Chuẩn bị</option>
+                                    <option value="shipped">Đang giao</option>
+                                    <option value="delivered">Bàn giao</option>
+                                    <option value="cancelled">Đã hủy</option>
+                                </select>
+
+                                <button class="action-btn" onclick="loadAllTransactions()"
+                                    style="background: var(--primary); color: white; padding: 10px 15px; border-radius: 10px;">🔄</button>
+                            </div>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table class="expo-table" id="recentOrdersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Khách hàng & SĐT</th>
+                                        <th>Sản phẩm / Quà tặng</th>
+                                        <th>Tổng thanh toán</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thời gian</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dữ liệu được đổ vào từ JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="recentOrdersPagination"
+                            style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 8px;"></div>
+                    </div>
                 </div>
             </div>
 
@@ -699,22 +814,25 @@
                 <div class="hub-header">
                     <div>
                         <h2>Sổ cái Giao dịch</h2>
-                        <p style="color: var(--text-muted);">Quản lý toàn bộ lộ trình đơn hàng từ đặt cọc đến bàn giao.
-                        </p>
+                        <p style="color: var(--text-muted);">Quản lý toàn bộ lộ trình đơn hàng từ đặt cọc đến bàn giao.</p>
                     </div>
                 </div>
                 <div class="expo-container">
                     <div class="expo-header">
-                        <h3>Lịch sử toàn bộ lệnh</h3>
+                        <h3>Toàn bộ lịch sử lệnh</h3>
                         <div style="display: flex; gap: 12px; align-items: center;">
-                            <select id="fullStatusFilter" onchange="filterFullOrders()" style="padding: 8px 12px; font-size: 0.85rem; width: auto;">
+                            <div style="position: relative;">
+                                <input type="text" id="fullSearchInput" onkeyup="searchFullOrders()" placeholder="Tìm kiếm đơn hàng..." style="padding: 8px 12px 8px 30px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.85rem;">
+                                <span style="position: absolute; left: 10px; top: 8px; opacity: 0.5;">🔍</span>
+                            </div>
+                            <select id="fullStatusFilter" onchange="filterFullOrders()" style="padding: 8px 12px; font-size: 0.85rem; border: 1px solid var(--border); border-radius: 8px;">
                                 <option value="">Tất cả trạng thái</option>
                                 <option value="pending">Chờ chốt đơn</option>
                                 <option value="confirmed">Đã xác nhận</option>
                                 <option value="processing">Đang chuẩn bị</option>
-                                <option value="shipped">Đang vận chuyển</option>
+                                <option value="shipped">Đang giao</option>
                                 <option value="delivered">Đã bàn giao</option>
-                                <option value="cancelled">Đã hủy</option>
+                                <option value="cancelled">Đã hủy bỏ</option>
                             </select>
                             <button class="action-btn" onclick="loadAllTransactions()">🔄</button>
                         </div>
@@ -732,7 +850,9 @@
                         </thead>
                         <tbody></tbody>
                     </table>
-                    <div id="fullOrdersPagination" style="padding: 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;"></div>
+                    <div id="fullOrdersPagination"
+                        style="padding: 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;">
+                    </div>
                 </div>
             </div>
 
@@ -769,7 +889,8 @@
                 <div class="hub-header">
                     <div>
                         <h2>Danh mục Quà tặng</h2>
-                        <p style="color: var(--text-muted);">Quản lý danh sách các phần quà dành cho chương trình khách hàng thân thiết.</p>
+                        <p style="color: var(--text-muted);">Quản lý danh sách các phần quà dành cho chương trình khách
+                            hàng thân thiết.</p>
                     </div>
                     <div>
                         <button class="btn-fair" onclick="openGiftModal()">+ Thêm Quà tặng mới</button>
@@ -876,14 +997,18 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Hình ảnh quà tặng</label>
-                        <div id="giftDropZone" style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #f8fafc; position: relative;">
+                        <div id="giftDropZone"
+                            style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #f8fafc; position: relative;">
                             <div id="giftPreviewContainer" style="display: none; margin-bottom: 10px;">
-                                <img id="giftPreviewImg" src="" style="max-height: 120px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                                <button type="button" onclick="removeGiftImage(event)" style="position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-weight: bold;">&times;</button>
+                                <img id="giftPreviewImg" src=""
+                                    style="max-height: 120px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                <button type="button" onclick="removeGiftImage(event)"
+                                    style="position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-weight: bold;">&times;</button>
                             </div>
                             <div id="giftUploadPrompt">
                                 <span style="font-size: 2rem;">📸</span>
-                                <p style="margin-top: 10px; font-size: 0.85rem; color: #64748b;">Kéo thả ảnh hoặc click để chọn</p>
+                                <p style="margin-top: 10px; font-size: 0.85rem; color: #64748b;">Kéo thả ảnh hoặc click
+                                    để chọn</p>
                             </div>
                             <input type="file" id="giftFileInput" style="display: none;" accept="image/*">
                             <input type="hidden" id="giftImageUrl">
@@ -896,7 +1021,8 @@
                 </div>
                 <div style="margin-top: 24px; display: flex; gap: 12px;">
                     <button type="submit" class="btn-fair" style="flex: 1;">💾 Lưu thông tin quà tặng</button>
-                    <button type="button" class="btn-fair" onclick="closeGiftModal()" style="background: #94a3b8;">Hủy</button>
+                    <button type="button" class="btn-fair" onclick="closeGiftModal()"
+                        style="background: #94a3b8;">Hủy</button>
                 </div>
             </form>
         </div>
@@ -941,20 +1067,25 @@
                     </div>
                     <div class="form-group">
                         <label>Tồn kho hiện tại</label>
-                        <input type="number" class="form-input" id="pStock" min="0" placeholder="Để trống nếu không giới hạn">
+                        <input type="number" class="form-input" id="pStock" min="0"
+                            placeholder="Để trống nếu không giới hạn">
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Mô tả ngắn</label>
-                    <textarea class="form-input" id="pDesc" rows="3" placeholder="Thông tin nổi bật của sản phẩm"></textarea>
+                    <textarea class="form-input" id="pDesc" rows="3"
+                        placeholder="Thông tin nổi bật của sản phẩm"></textarea>
                 </div>
                 <div class="form-group">
                     <label>URL Hình ảnh (Link ảnh)</label>
                     <input type="url" class="form-input" id="pImg" placeholder="https://...">
                 </div>
                 <div style="display: flex; gap: 12px; margin-top: 24px;">
-                    <button type="button" onclick="closeModal('productOverlay')" style="flex: 1; padding: 14px; border: none; background: #f1f5f9; border-radius: 12px; font-weight: 700; cursor: pointer;">Hủy</button>
-                    <button type="submit" style="flex: 1; padding: 14px; border: none; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; cursor: pointer;">Lưu thông tin</button>
+                    <button type="button" onclick="closeModal('productOverlay')"
+                        style="flex: 1; padding: 14px; border: none; background: #f1f5f9; border-radius: 12px; font-weight: 700; cursor: pointer;">Hủy</button>
+                    <button type="submit"
+                        style="flex: 1; padding: 14px; border: none; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; cursor: pointer;">Lưu
+                        thông tin</button>
                 </div>
             </form>
         </div>
@@ -971,7 +1102,8 @@
                 <input type="hidden" id="voucherId">
                 <div class="form-group">
                     <label>Mã Voucher (Code)</label>
-                    <input type="text" class="form-input" id="vCode" style="text-transform: uppercase;" required placeholder="VD: EXPO2026">
+                    <input type="text" class="form-input" id="vCode" style="text-transform: uppercase;" required
+                        placeholder="VD: EXPO2026">
                 </div>
                 <div class="form-group">
                     <label>Tên chương trình</label>
@@ -1001,8 +1133,11 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 12px; margin-top: 24px;">
-                    <button type="button" onclick="closeModal('voucherOverlay')" style="flex: 1; padding: 14px; border: none; background: #f1f5f9; border-radius: 12px; font-weight: 700; cursor: pointer;">Hủy</button>
-                    <button type="submit" style="flex: 1; padding: 14px; border: none; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; cursor: pointer;">Lưu lưu đãi</button>
+                    <button type="button" onclick="closeModal('voucherOverlay')"
+                        style="flex: 1; padding: 14px; border: none; background: #f1f5f9; border-radius: 12px; font-weight: 700; cursor: pointer;">Hủy</button>
+                    <button type="submit"
+                        style="flex: 1; padding: 14px; border: none; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; cursor: pointer;">Lưu
+                        lưu đãi</button>
                 </div>
             </form>
         </div>
@@ -1015,7 +1150,7 @@
                 <h3>Chi tiết Giao dịch: <span id="dtOrderNo" style="color:var(--text-main)">...</span></h3>
                 <button class="close-btn" onclick="closeModal('orderDetailOverlay')">×</button>
             </div>
-            
+
             <div class="form-row">
                 <!-- Cột trái: Khách hàng & Giao hàng -->
                 <div>
@@ -1037,7 +1172,8 @@
                 <div>
                     <div class="order-detail-card">
                         <div class="order-detail-header">📦 Sản phẩm</div>
-                        <div class="detail-row"><span>Mặt hàng:</span><span id="dtProduct" style="color:var(--primary)">-</span></div>
+                        <div class="detail-row"><span>Mặt hàng:</span><span id="dtProduct"
+                                style="color:var(--primary)">-</span></div>
                         <div class="detail-row"><span>Gian hàng:</span><span id="dtOwner">-</span></div>
                         <div class="detail-row"><span>Số lượng:</span><span id="dtQty">-</span></div>
                         <div class="detail-row"><span>Đơn giá:</span><span id="dtPrice">-</span></div>
@@ -1045,8 +1181,10 @@
                     <div class="order-detail-card" style="background:#f0fdf4; border: 1px solid #dcfce7;">
                         <div class="order-detail-header">💰 Thanh toán</div>
                         <div class="detail-row"><span>Tạm tính:</span><span id="dtTotal">-</span></div>
-                        <div class="detail-row"><span>Mã giảm (<span id="dtVoucherCode">none</span>):</span><span id="dtDiscount" style="color:var(--accent)">-</span></div>
-                        <div class="detail-row" style="margin-top:10px; padding-top:10px; border-top:1px solid #dcfce7;">
+                        <div class="detail-row"><span>Mã giảm (<span id="dtVoucherCode">none</span>):</span><span
+                                id="dtDiscount" style="color:var(--accent)">-</span></div>
+                        <div class="detail-row"
+                            style="margin-top:10px; padding-top:10px; border-top:1px solid #dcfce7;">
                             <span style="font-weight:800; color:var(--text-main)">THỰC THU:</span>
                             <span id="dtFinal" style="font-size:1.2rem; font-weight:800; color:var(--primary)">-</span>
                         </div>
@@ -1055,8 +1193,11 @@
             </div>
 
             <div style="margin-top:20px; text-align:right;">
-                <button type="button" onclick="closeModal('orderDetailOverlay')" style="padding: 12px 24px; border: none; background: #e2e8f0; color:#475569; border-radius: 12px; font-weight: 700; cursor: pointer; margin-right:10px;">Đóng</button>
-                <button type="button" onclick="openMod(currOrderObj._id, currOrderObj.status)" style="padding: 12px 24px; border: none; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; cursor: pointer;">Cập nhật Lộ trình</button>
+                <button type="button" onclick="closeModal('orderDetailOverlay')"
+                    style="padding: 12px 24px; border: none; background: #e2e8f0; color:#475569; border-radius: 12px; font-weight: 700; cursor: pointer; margin-right:10px;">Đóng</button>
+                <button type="button" onclick="openMod(currOrderObj._id, currOrderObj.status)"
+                    style="padding: 12px 24px; border: none; background: var(--primary); color: white; border-radius: 12px; font-weight: 700; cursor: pointer;">Cập
+                    nhật Lộ trình</button>
             </div>
         </div>
     </div>
@@ -1128,14 +1269,174 @@
             if (target === 'gifts') loadExpoGifts();
         }
 
+        let revenueChart = null;
+        let statusChart = null;
+        let topProductsChart = null;
+        let ratioChart = null;
+
         async function loadStats() {
-            const r = await fetchExpo('/admin/api/stats');
+            const r = await fetchExpo('/admin/api/dashboard-stats');
             if (r && r.success) {
                 document.getElementById('statOrders').innerText = r.data.orderCount.toLocaleString();
                 document.getElementById('statProducts').innerText = r.data.productCount.toLocaleString();
                 document.getElementById('statVouchers').innerText = r.data.voucherCount.toLocaleString();
-                document.getElementById('statRevenue').innerText = (r.data.orderCount * 520000).toLocaleString() + ' ₫';
+
+                // Tính tổng doanh thu thực tế từ dữ liệu hôm nay
+                const totalRevenue = (r.data.revenue || []).reduce((sum, h) => sum + h.total, 0);
+                document.getElementById('statRevenue').innerText = totalRevenue.toLocaleString() + ' ₫';
+
+                initCharts(r.data);
             }
+        }
+
+        function initCharts(data) {
+            const { revenue, status, topProducts, ratio, topBuyers } = data;
+
+            // --- Top Buyers List ---
+            const buyersList = document.getElementById('topBuyersList');
+            if (topBuyers && topBuyers.length > 0) {
+                buyersList.innerHTML = topBuyers.map((b, i) => `
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: ${i === 0 ? '#fffbeb' : '#f8fafc'}; border-radius: 12px; border: 1px solid ${i === 0 ? '#fef3c7' : 'transparent'};">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 32px; height: 32px; background: ${i === 0 ? '#f59e0b' : '#64748b'}; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem;">
+                                ${i + 1}
+                            </div>
+                            <div>
+                                <div style="font-weight: 700; color: var(--text-main);">${b.name}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">${b._id}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 800; color: var(--primary);">${b.totalSpent.toLocaleString()} ₫</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">${b.count} giao dịch</div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                buyersList.innerHTML = '<div style="text-align:center; padding: 40px; color:#94a3b8;">Chưa có dữ liệu mua hàng.</div>';
+            }
+
+            // 1. Hourly Revenue Chart
+            const revCtx = document.getElementById('revenueChart').getContext('2d');
+            if (revenueChart) revenueChart.destroy();
+
+            // Prepare 24 hours labels
+            const labels = Array.from({ length: 24 }, (_, i) => i + 'h');
+            const revenueMap = (revenue || []).reduce((acc, curr) => {
+                acc[curr._id] = curr.total;
+                return acc;
+            }, {});
+            const chartData = labels.map((_, i) => revenueMap[i] || 0);
+
+            revenueChart = new Chart(revCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu',
+                        data: chartData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 2,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: v => v.toLocaleString() + ' ₫' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 2. Status Distribution
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            if (statusChart) statusChart.destroy();
+
+            const statusMapNames = {
+                pending: 'Chờ chốt', confirmed: 'Xác nhận', processing: 'Chuẩn bị',
+                shipped: 'Giao hàng', delivered: 'Bàn giao', cancelled: 'Hủy'
+            };
+            const statusColors = ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#15803d', '#ef4444'];
+
+            statusChart = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: (status || []).map(d => statusMapNames[d._id] || d._id),
+                    datasets: [{
+                        data: (status || []).map(d => d.count),
+                        backgroundColor: statusColors,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15, font: { size: 10 } } }
+                    },
+                    cutout: '75%'
+                }
+            });
+
+            // 3. Top Products Bar Chart
+            const topCtx = document.getElementById('topProductsChart').getContext('2d');
+            if (topProductsChart) topProductsChart.destroy();
+
+            topProductsChart = new Chart(topCtx, {
+                type: 'bar',
+                data: {
+                    labels: (topProducts || []).map(p => p.name.substring(0, 15) + (p.name.length > 15 ? '...' : '')),
+                    datasets: [{
+                        label: 'Số lượng bán',
+                        data: (topProducts || []).map(p => p.count),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, grid: { display: false } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 4. Gift vs Product Ratio
+            const ratioCtx = document.getElementById('ratioChart').getContext('2d');
+            if (ratioChart) ratioChart.destroy();
+
+            ratioChart = new Chart(ratioCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Sản phẩm', 'Quà tặng'],
+                    datasets: [{
+                        data: [
+                            (ratio || []).find(r => r._id === false)?.count || 0,
+                            (ratio || []).find(r => r._id === true)?.count || 0
+                        ],
+                        backgroundColor: ['#15803d', '#f97316'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } }
+                    }
+                }
+            });
         }
 
         // --- Orders Management ---
@@ -1153,6 +1454,12 @@
             }
         }
 
+        // --- Search Logic ---
+        function searchRecentOrders() {
+            recentOrdersPage = 1;
+            renderRecentOrders();
+        }
+
         function filterRecentOrders() {
             recentOrdersPage = 1;
             renderRecentOrders();
@@ -1163,10 +1470,32 @@
             renderFullOrders();
         }
 
+        function searchFullOrders() {
+            fullOrdersPage = 1;
+            renderFullOrders();
+        }
+
         function renderRecentOrders() {
             const statusFilter = document.getElementById('recentStatusFilter').value;
+            const searchTerm = document.getElementById('recentSearchInput').value.toLowerCase();
+
             let filtered = window.adminAllOrders;
+
+            // Filter by status
             if (statusFilter) filtered = filtered.filter(o => o.status === statusFilter);
+
+            // Filter by search term
+            if (searchTerm) {
+                filtered = filtered.filter(o => 
+                    (o.customerName || '').toLowerCase().includes(searchTerm) || 
+                    (o.customerPhone || '').includes(searchTerm) ||
+                    (o.product?.name || '').toLowerCase().includes(searchTerm) ||
+                    (o.gift?.name || '').toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Sort by most recent
+            filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
             const totalPages = Math.ceil(filtered.length / ORDERS_PER_PAGE);
             if (recentOrdersPage > totalPages) recentOrdersPage = totalPages || 1;
@@ -1175,12 +1504,24 @@
             const paginated = filtered.slice(startIdx, startIdx + ORDERS_PER_PAGE);
 
             const tbody = document.querySelector('#recentOrdersTable tbody');
+            if (paginated.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px; color:#94a3b8;">Không tìm thấy kết quả phù hợp.</td></tr>';
+                document.getElementById('recentOrdersPagination').innerHTML = '';
+                return;
+            }
+
             tbody.innerHTML = paginated.map(o => `
                 <tr>
-                    <td style="font-weight: 700;">${o.customerName}</td>
+                    <td>
+                        <div style="font-weight: 700;">${o.customerName}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">${o.customerPhone}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600; color: var(--secondary);">${o.isGift ? '🎁 ' + (o.gift?.name || 'Quà tặng') : (o.product?.name || '---')}</div>
+                    </td>
                     <td style="font-weight: 800; color: var(--primary);">${o.finalPrice.toLocaleString()} ₫</td>
                     <td><span class="booth-pill bg-${o.status}">${translate(o.status)}</span></td>
-                    <td style="color: var(--text-muted);">${new Date(o.createdAt).toLocaleTimeString('vi-VN')}</td>
+                    <td style="color: var(--text-muted); font-size: 0.85rem;">${new Date(o.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</td>
                     <td>
                         <button class="action-btn" onclick="viewOrder('${o._id}')">👁️</button>
                     </td>
@@ -1192,8 +1533,27 @@
 
         function renderFullOrders() {
             const statusFilter = document.getElementById('fullStatusFilter').value;
-            let filtered = window.adminAllOrders;
+            const searchTermInput = document.getElementById('fullSearchInput');
+            const searchTerm = searchTermInput ? searchTermInput.value.toLowerCase() : '';
+            
+            let filtered = window.adminAllOrders || [];
+            
+            // Filter by status
             if (statusFilter) filtered = filtered.filter(o => o.status === statusFilter);
+            
+            // Filter by search term
+            if (searchTerm) {
+                filtered = filtered.filter(o => 
+                    (o.customerName || '').toLowerCase().includes(searchTerm) || 
+                    (o.customerPhone || '').includes(searchTerm) ||
+                    (o.orderNumber || '').toLowerCase().includes(searchTerm) ||
+                    (o.product?.name || '').toLowerCase().includes(searchTerm) ||
+                    (o.gift?.name || '').toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Sort by most recent
+            filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
             const totalPages = Math.ceil(filtered.length / ORDERS_PER_PAGE);
             if (fullOrdersPage > totalPages) fullOrdersPage = totalPages || 1;
@@ -1202,11 +1562,17 @@
             const paginated = filtered.slice(startIdx, startIdx + ORDERS_PER_PAGE);
 
             const tbody = document.querySelector('#fullOrdersTable tbody');
+            if (paginated.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 40px; color:#94a3b8;">Không tìm thấy kết quả phù hợp.</td></tr>';
+                document.getElementById('fullOrdersPagination').innerHTML = '';
+                return;
+            }
+
             tbody.innerHTML = paginated.map(o => `
                 <tr>
                     <td>
                         <div style="font-weight: 800;">${o.orderNumber || 'EXPO-' + o._id.slice(-6).toUpperCase()}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">${new Date(o.createdAt).toLocaleDateString('vi-VN')}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">${new Date(o.createdAt).toLocaleDateString('vi-VN')} ${new Date(o.createdAt).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}</div>
                     </td>
                     <td>
                         <div style="font-weight: 700;">${o.customerName}</div>
@@ -1302,7 +1668,7 @@
             if (r && r.success) { notify('Đã cập nhật lộ trình giao dịch!'); closeStatusModal(); loadAllTransactions(); }
         }
 
-        async function delExpo(t, id) { 
+        async function delExpo(t, id) {
             const result = await Swal.fire({
                 title: 'Xác nhận xóa?',
                 text: "Dữ liệu này sẽ được gỡ khỏi hệ thống và không thể khôi phục!",
@@ -1314,13 +1680,13 @@
                 cancelButtonText: 'Hủy'
             });
 
-            if (result.isConfirmed) { 
-                const r = await fetchExpo(`/admin/api/${t}/${id}`, 'DELETE'); 
-                if (r && r.success) { 
-                    notify('Dữ liệu đã được gỡ khỏi hệ thống.'); 
+            if (result.isConfirmed) {
+                const r = await fetchExpo(`/admin/api/${t}/${id}`, 'DELETE');
+                if (r && r.success) {
+                    notify('Dữ liệu đã được gỡ khỏi hệ thống.');
                     const activeMenu = document.querySelector('.menu-link.active').dataset.target;
                     loadData(activeMenu);
-                } 
+                }
             }
         }
 
@@ -1332,7 +1698,7 @@
             if (r && r.success) {
                 allBusinessOwners = r.data;
                 const select = document.getElementById('pOwner');
-                select.innerHTML = '<option value="">-- Chọn doanh nghiệp --</option>' + 
+                select.innerHTML = '<option value="">-- Chọn doanh nghiệp --</option>' +
                     r.data.map(owner => `<option value="${owner._id}">${owner.businessName} (${owner.name})</option>`).join('');
             }
         }
@@ -1350,7 +1716,7 @@
                 document.getElementById('dtAddress').innerText = o.address;
                 document.getElementById('dtRegion').innerText = `${o.district}, ${o.city}`;
                 document.getElementById('dtNotes').innerText = o.notes || 'Không có';
-                
+
                 if (o.isGift) {
                     document.getElementById('dtProduct').innerText = o.gift?.name || 'QUÀ TẶNG';
                     document.getElementById('dtOwner').innerText = 'DREAMAX EXPO';
@@ -1360,9 +1726,9 @@
                     document.getElementById('dtOwner').innerText = o.businessOwner?.businessName || '---';
                     document.getElementById('dtPrice').innerText = (o.price || 0).toLocaleString() + ' ₫';
                 }
-                
+
                 document.getElementById('dtQty').innerText = o.quantity + 'x';
-                
+
                 document.getElementById('dtTotal').innerText = (o.totalPrice || 0).toLocaleString() + ' ₫';
                 document.getElementById('dtVoucherCode').innerText = o.voucherCode || 'Không';
                 document.getElementById('dtDiscount').innerText = '-' + (o.discount || 0).toLocaleString() + ' ₫';
@@ -1402,7 +1768,7 @@
         function openProductModal(id = null) {
             document.getElementById('productForm').reset();
             if (allBusinessOwners.length === 0) fetchOwners();
-            
+
             if (id) {
                 const p = window.allProductsData.find(x => x._id === id);
                 if (p) {
@@ -1590,7 +1956,7 @@
                 closeGiftModal();
                 return Swal.fire('Thông báo', 'Vui lòng chọn file hình ảnh!', 'warning');
             }
-            
+
             const formData = new FormData();
             formData.append('file', file);
 

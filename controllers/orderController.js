@@ -524,6 +524,86 @@ class OrderController {
       });
     }
   }
+
+  // Get rich stats logic for internal use (Focusing on 1 day - TODAY)
+  async getDashboardStatsInternal() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // 1. Hourly Revenue for Today
+    const hourlyRevenue = await Order.aggregate([
+      { $match: { createdAt: { $gte: today, $lt: tomorrow }, status: { $ne: 'cancelled' } } },
+      {
+        $group: {
+          _id: { $hour: "$createdAt" },
+          total: { $sum: "$finalPrice" }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // 2. Status distribution (Today)
+    const statusData = await Order.aggregate([
+      { $match: { createdAt: { $gte: today, $lt: tomorrow } } },
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+
+    // 3. Top Products (Today)
+    const topProducts = await Order.aggregate([
+      { $match: { createdAt: { $gte: today, $lt: tomorrow }, isGift: false } },
+      { $group: { _id: "$product", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: 'productservices',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'productInfo'
+        }
+      },
+      { $unwind: '$productInfo' },
+      { $project: { name: '$productInfo.name', count: 1 } }
+    ]);
+
+    // 4. Gift vs Product Ratio (Today)
+    const ratioData = await Order.aggregate([
+      { $match: { createdAt: { $gte: today, $lt: tomorrow } } },
+      { $group: { _id: "$isGift", count: { $sum: 1 } } }
+    ]);
+
+    // 5. Top Buyers (Today)
+    const topBuyers = await Order.aggregate([
+      { $match: { createdAt: { $gte: today, $lt: tomorrow }, status: { $ne: 'cancelled' } } },
+      { $group: { _id: "$customerPhone", name: { $first: "$customerName" }, totalSpent: { $sum: "$finalPrice" }, count: { $sum: 1 } } },
+      { $sort: { totalSpent: -1 } },
+      { $limit: 5 }
+    ]);
+
+    return {
+      revenue: hourlyRevenue,
+      status: statusData,
+      topProducts: topProducts,
+      ratio: ratioData,
+      topBuyers: topBuyers
+    };
+  }
+
+  // Get rich stats for dashboard charts (API endpoint)
+  async getDashboardStats(req, res) {
+    try {
+      const stats = await this.getDashboardStatsInternal();
+      res.json({
+        success: true,
+        data: stats
+      });
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+      res.status(500).json({ success: false, message: 'Lỗi hệ thống khi tải thống kê' });
+    }
+  }
 }
 
 module.exports = new OrderController();

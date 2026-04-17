@@ -279,6 +279,7 @@
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            const errorEl = document.getElementById('errorNotify');
             errorEl.style.display = 'none';
             loginBtn.disabled = true;
             loginBtn.innerHTML = 'Đang xác thực quyền truy cập...';
