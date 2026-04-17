@@ -662,7 +662,18 @@
                 <div class="expo-container">
                     <div class="expo-header">
                         <h3>Các giao dịch vừa chốt tại quầy</h3>
-                        <button class="action-btn" onclick="loadRecentTransactions()">🔄</button>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <select id="recentStatusFilter" onchange="filterRecentOrders()" style="padding: 8px 12px; font-size: 0.85rem; width: auto;">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="pending">Chờ chốt đơn</option>
+                                <option value="confirmed">Đã xác nhận</option>
+                                <option value="processing">Đang chuẩn bị</option>
+                                <option value="shipped">Đang Vận chuyển</option>
+                                <option value="delivered">Đã bàn giao</option>
+                                <option value="cancelled">Đã hủy</option>
+                            </select>
+                            <button class="action-btn" onclick="loadAllTransactions()">🔄</button>
+                        </div>
                     </div>
                     <table class="expo-table" id="recentOrdersTable">
                         <thead>
@@ -671,10 +682,12 @@
                                 <th>Tổng thanh toán</th>
                                 <th>Trạng thái</th>
                                 <th>Giờ chốt</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
                     </table>
+                    <div id="recentOrdersPagination" style="padding: 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;"></div>
                 </div>
             </div>
 
@@ -688,6 +701,21 @@
                     </div>
                 </div>
                 <div class="expo-container">
+                    <div class="expo-header">
+                        <h3>Lịch sử toàn bộ lệnh</h3>
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <select id="fullStatusFilter" onchange="filterFullOrders()" style="padding: 8px 12px; font-size: 0.85rem; width: auto;">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="pending">Chờ chốt đơn</option>
+                                <option value="confirmed">Đã xác nhận</option>
+                                <option value="processing">Đang chuẩn bị</option>
+                                <option value="shipped">Đang vận chuyển</option>
+                                <option value="delivered">Đã bàn giao</option>
+                                <option value="cancelled">Đã hủy</option>
+                            </select>
+                            <button class="action-btn" onclick="loadAllTransactions()">🔄</button>
+                        </div>
+                    </div>
                     <table class="expo-table" id="fullOrdersTable">
                         <thead>
                             <tr>
@@ -701,6 +729,7 @@
                         </thead>
                         <tbody></tbody>
                     </table>
+                    <div id="fullOrdersPagination" style="padding: 16px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;"></div>
                 </div>
             </div>
 
@@ -1004,7 +1033,7 @@
         }
 
         async function loadData(target) {
-            if (target === 'overview') { loadStats(); loadRecentTransactions(); }
+            if (target === 'overview') { loadStats(); loadAllTransactions(); }
             if (target === 'orders') loadAllTransactions();
             if (target === 'products') loadExpoCatalog();
             if (target === 'vouchers') loadExpoVouchers();
@@ -1020,48 +1049,121 @@
             }
         }
 
-        async function loadRecentTransactions() {
-            const r = await fetchExpo('/admin/api/orders');
-            if (r && r.success) {
-                const tbody = document.querySelector('#recentOrdersTable tbody');
-                tbody.innerHTML = r.data.slice(0, 5).map(o => `
-                    <tr>
-                        <td style="font-weight: 700;">${o.customerName}</td>
-                        <td style="font-weight: 800; color: var(--primary);">${o.finalPrice.toLocaleString()} ₫</td>
-                        <td><span class="booth-pill bg-${o.status}">${translate(o.status)}</span></td>
-                        <td style="color: var(--text-muted);">${new Date(o.createdAt).toLocaleTimeString('vi-VN')}</td>
-                    </tr>
-                `).join('');
-            }
-        }
+        // --- Orders Management ---
+        window.adminAllOrders = [];
+        let recentOrdersPage = 1;
+        let fullOrdersPage = 1;
+        const ORDERS_PER_PAGE = 10;
 
         async function loadAllTransactions() {
             const r = await fetchExpo('/admin/api/orders');
             if (r && r.success) {
-                const tbody = document.querySelector('#fullOrdersTable tbody');
-                tbody.innerHTML = r.data.map(o => `
-                    <tr>
-                        <td>
-                            <div style="font-weight: 800;">${o.orderNumber || 'EXPO-' + o._id.slice(-6).toUpperCase()}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">${new Date(o.createdAt).toLocaleDateString('vi-VN')}</div>
-                        </td>
-                        <td>
-                            <div style="font-weight: 700;">${o.customerName}</div>
-                            <div style="font-size: 0.8rem; color: var(--secondary);">${o.customerPhone}</div>
-                        </td>
-                        <td>
-                            <div style="font-weight: 600;">${o.product?.name || '---'}</div>
-                            <div style="font-size: 0.7rem; color: var(--accent);">Mã Thẻ: ${o.voucherCode || 'Không'}</div>
-                        </td>
-                        <td><div style="font-weight: 800; color: var(--primary);">${o.finalPrice.toLocaleString()} ₫</div></td>
-                        <td><span class="booth-pill bg-${o.status}">${translate(o.status)}</span></td>
-                        <td>
-                            <button class="action-btn" onclick="viewOrder('${o._id}')">👁️</button>
-                            <button class="action-btn" onclick="openMod('${o._id}', '${o.status}')">✏️</button>
-                        </td>
-                    </tr>
-                `).join('');
+                window.adminAllOrders = r.data;
+                renderRecentOrders();
+                renderFullOrders();
             }
+        }
+
+        function filterRecentOrders() {
+            recentOrdersPage = 1;
+            renderRecentOrders();
+        }
+
+        function filterFullOrders() {
+            fullOrdersPage = 1;
+            renderFullOrders();
+        }
+
+        function renderRecentOrders() {
+            const statusFilter = document.getElementById('recentStatusFilter').value;
+            let filtered = window.adminAllOrders;
+            if (statusFilter) filtered = filtered.filter(o => o.status === statusFilter);
+
+            const totalPages = Math.ceil(filtered.length / ORDERS_PER_PAGE);
+            if (recentOrdersPage > totalPages) recentOrdersPage = totalPages || 1;
+
+            const startIdx = (recentOrdersPage - 1) * ORDERS_PER_PAGE;
+            const paginated = filtered.slice(startIdx, startIdx + ORDERS_PER_PAGE);
+
+            const tbody = document.querySelector('#recentOrdersTable tbody');
+            tbody.innerHTML = paginated.map(o => `
+                <tr>
+                    <td style="font-weight: 700;">${o.customerName}</td>
+                    <td style="font-weight: 800; color: var(--primary);">${o.finalPrice.toLocaleString()} ₫</td>
+                    <td><span class="booth-pill bg-${o.status}">${translate(o.status)}</span></td>
+                    <td style="color: var(--text-muted);">${new Date(o.createdAt).toLocaleTimeString('vi-VN')}</td>
+                    <td>
+                        <button class="action-btn" onclick="viewOrder('${o._id}')">👁️</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderPagination('recentOrdersPagination', totalPages, recentOrdersPage, (p) => { recentOrdersPage = p; renderRecentOrders(); });
+        }
+
+        function renderFullOrders() {
+            const statusFilter = document.getElementById('fullStatusFilter').value;
+            let filtered = window.adminAllOrders;
+            if (statusFilter) filtered = filtered.filter(o => o.status === statusFilter);
+
+            const totalPages = Math.ceil(filtered.length / ORDERS_PER_PAGE);
+            if (fullOrdersPage > totalPages) fullOrdersPage = totalPages || 1;
+
+            const startIdx = (fullOrdersPage - 1) * ORDERS_PER_PAGE;
+            const paginated = filtered.slice(startIdx, startIdx + ORDERS_PER_PAGE);
+
+            const tbody = document.querySelector('#fullOrdersTable tbody');
+            tbody.innerHTML = paginated.map(o => `
+                <tr>
+                    <td>
+                        <div style="font-weight: 800;">${o.orderNumber || 'EXPO-' + o._id.slice(-6).toUpperCase()}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">${new Date(o.createdAt).toLocaleDateString('vi-VN')}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700;">${o.customerName}</div>
+                        <div style="font-size: 0.8rem; color: var(--secondary);">${o.customerPhone}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600;">${o.product?.name || '---'}</div>
+                        <div style="font-size: 0.7rem; color: var(--accent);">Mã Thẻ: ${o.voucherCode || 'Không'}</div>
+                    </td>
+                    <td><div style="font-weight: 800; color: var(--primary);">${o.finalPrice.toLocaleString()} ₫</div></td>
+                    <td><span class="booth-pill bg-${o.status}">${translate(o.status)}</span></td>
+                    <td>
+                        <button class="action-btn" onclick="viewOrder('${o._id}')">👁️</button>
+                        <button class="action-btn" onclick="openMod('${o._id}', '${o.status}')">✏️</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderPagination('fullOrdersPagination', totalPages, fullOrdersPage, (p) => { fullOrdersPage = p; renderFullOrders(); });
+        }
+
+        function renderPagination(containerId, totalPages, currentPage, onPageChange) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            const prevNode = document.createElement('button');
+            prevNode.innerText = '❮';
+            prevNode.className = 'action-btn';
+            prevNode.disabled = currentPage === 1;
+            prevNode.style.fontWeight = '700';
+            prevNode.onclick = () => onPageChange(currentPage - 1);
+            container.appendChild(prevNode);
+
+            const infoNode = document.createElement('span');
+            infoNode.style.cssText = 'padding: 8px 12px; font-weight: 600; font-size: 0.9rem;';
+            infoNode.innerText = `Trang ${currentPage} / ${totalPages}`;
+            container.appendChild(infoNode);
+
+            const nextNode = document.createElement('button');
+            nextNode.innerText = '❯';
+            nextNode.className = 'action-btn';
+            nextNode.disabled = currentPage === totalPages;
+            nextNode.style.fontWeight = '700';
+            nextNode.onclick = () => onPageChange(currentPage + 1);
+            container.appendChild(nextNode);
         }
 
         async function loadExpoCatalog() {
@@ -1108,7 +1210,7 @@
         async function updateStatus() {
             const s = document.getElementById('statusSelect').value;
             const r = await fetchExpo(`/admin/api/orders/${currID}/status`, 'PUT', { status: s });
-            if (r && r.success) { notify('Đã cập nhật lộ trình giao dịch!'); closeStatusModal(); loadData('orders'); if (document.getElementById('overviewView').classList.contains('active')) loadRecentTransactions(); }
+            if (r && r.success) { notify('Đã cập nhật lộ trình giao dịch!'); closeStatusModal(); loadAllTransactions(); }
         }
 
         async function delExpo(t, id) { if (!confirm('Expo Monitor: Xóa dữ liệu này?')) return; const r = await fetchExpo(`/admin/api/${t}/${id}`, 'DELETE'); if (r && r.success) { notify('Dữ liệu đã được gỡ khỏi hệ thống.'); loadData(target); } }
