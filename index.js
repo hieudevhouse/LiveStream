@@ -58,19 +58,19 @@ const startServer = async () => {
     await connectDB();
     await connectLakehouseDB();
 
-    if (process.env.NODE_ENV !== 'production') {
+    // Khởi động các service chạy nền nếu không phải môi trường Vercel (Serverless)
+    if (!process.env.VERCEL) {
       lakeIngestion.startCron();
-    }
-    
-    // chỉ listen khi chạy local
-    if (process.env.NODE_ENV !== 'production') {
+      
       app.listen(PORT, '0.0.0.0', () => {
-        console.log(`Server running on port ${PORT}`);
+        console.log(`✅ Server is running locally on port ${PORT}`);
       });
+    } else {
+      console.log('🚀 App initialized for Vercel Serverless environment');
     }
 
   } catch (err) {
-    console.error('Failed to start server due to db error', err);
+    console.error('❌ Failed to start server due to db error', err);
   }
 };
 
