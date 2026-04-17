@@ -3,69 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Đăng nhập Admin</title>
+    <title>Đăng nhập Trung tâm Điều hành Hội chợ | Dreamax Expo</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .login-box { background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        .login-box h2 { text-align: center; margin-bottom: 30px; color: #1e293b; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #475569; font-weight: 500; }
-        input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 16px; }
-        input:focus { border-color: #3b82f6; }
-        button { width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        button:hover { background: #2563eb; }
-        #errMsg { color: #dc2626; text-align: center; margin-top: 15px; font-size: 14px; }
+        :root {
+            --primary: #15803d;
+            --primary-dark: #166534;
+            --accent: #f97316;
+            --bg-overlay: rgba(15, 23, 42, 0.85);
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Lexend', sans-serif;
+            background: #0f172a;
+            /* Nature/Expo themed background simulation with CSS gradients */
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(21, 128, 61, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(249, 115, 22, 0.1) 0px, transparent 50%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        .login-container {
+            width: min(480px, 92%);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Decorative Element */
+        .expo-token {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            color: var(--primary);
+            padding: 10px 24px;
+            border-radius: 12px;
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border-bottom: 4px solid var(--accent);
+            z-index: 20;
+            white-space: nowrap;
+        }
+
+        .login-card {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 60px 40px 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+            background: linear-gradient(to bottom, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .login-header p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #cbd5e1;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+        }
+
+        .form-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px 20px 16px 50px;
+            color: white;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(21, 128, 61, 0.2);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.4s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 40px;
+            box-shadow: 0 10px 20px rgba(21, 128, 61, 0.3);
+        }
+
+        .btn-login:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(21, 128, 61, 0.4);
+        }
+
+        .btn-login:active { transform: translateY(0); }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .error-alert {
+            margin-top: 25px;
+            padding: 14px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            text-align: center;
+            display: none;
+            font-weight: 600;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #475569;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Abstract blobs for a premium look */
+        .blob {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: var(--primary);
+            filter: blur(120px);
+            opacity: 0.07;
+            border-radius: 50%;
+            z-index: 0;
+        }
     </style>
 </head>
 <body>
 
-<div class="login-box">
-    <h2>Trang Quản Trị</h2>
-    <form id="loginForm">
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="email" required placeholder="admin@tvad.com" value="admin@tvad.com">
-        </div>
-        <div class="form-group">
-            <label>Mật khẩu</label>
-            <input type="password" id="password" required placeholder="••••••••" value="admin123">
-        </div>
-        <button type="submit">Đăng Nhập</button>
-        <div id="errMsg"></div>
-    </form>
-</div>
+    <div class="blob" style="top: -100px; left: -100px;"></div>
+    <div class="blob" style="bottom: -150px; right: -50px; background: var(--accent);"></div>
 
-<script>
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const msg = document.getElementById('errMsg');
+    <div class="login-container">
+        <div class="expo-token">EXPO MONITOR 2026</div>
         
-        try {
-            const res = await fetch('/admin/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-            if (data.success) {
-                localStorage.setItem('adminToken', data.token);
-                window.location.href = '/admin'; // Chuyển sang dashboard
-            } else {
-                msg.textContent = data.message || 'Lỗi đăng nhập';
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Dreamax Agriculture</h1>
+                <p>Hệ thống Quản trị Hội chợ Nông nghiệp</p>
+            </div>
+
+            <form id="fairLoginForm">
+                <div class="form-group">
+                    <label class="label">Tài khoản nhân sự</label>
+                    <div class="input-wrapper">
+                        <i>📧</i>
+                        <input type="email" id="email" class="form-input" required placeholder="Nhập email của bạn...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label">Mã số bảo mật</label>
+                    <div class="input-wrapper">
+                        <i>🔑</i>
+                        <input type="password" id="password" class="form-input" required placeholder="Nhập mật khẩu...">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginEnter">
+                    Vào Cổng Quản Trị 🎋
+                </button>
+            </form>
+
+            <div id="errorNotify" class="error-alert"></div>
+        </div>
+
+        <div class="footer">
+            &copy; 2026 Ban Tổ Chức Hội Chợ Nông Sản &middot; Dreamax Digital Platform
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('fairLoginForm');
+        const loginBtn = document.getElementById('loginEnter');
+        const errorEl = document.getElementById('errorNotify');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            errorEl.style.display = 'none';
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = 'Đang xác thực quyền truy cập...';
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('/admin/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    localStorage.setItem('adminToken', data.token);
+                    window.location.href = '/admin';
+                } else {
+                    errorEl.textContent = '❌ ' + (data.message || 'Sai thông tin đăng nhập hội chợ');
+                    errorEl.style.display = 'block';
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = 'Vào Cổng Quản Trị 🎋';
+                }
+            } catch (err) {
+                errorEl.textContent = '❌ Lỗi kết nối hệ thống điều hành';
+                errorEl.style.display = 'block';
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Vào Cổng Quản Trị 🎋';
             }
-        } catch (error) {
-            msg.textContent = 'Mất kết nối server';
-        }
-    });
+        });
 
-    // Nếu đã có token thì đẩy thẳng vào trong
-    if (localStorage.getItem('adminToken')) {
-        window.location.href = '/admin';
-    }
-</script>
-
+        // Redirect if token already exists
+        if (localStorage.getItem('adminToken')) { window.location.href = '/admin'; }
+    </script>
 </body>
 </html>

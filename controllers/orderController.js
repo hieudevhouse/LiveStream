@@ -52,10 +52,32 @@ class OrderController {
       let finalPrice = totalPrice;
 
       if (voucherCode) {
-        const voucher = await Voucher.findOne({
-          code: voucherCode.toUpperCase(),
+        const normalizedCode = voucherCode.toUpperCase();
+        let voucher = await Voucher.findOne({
+          code: normalizedCode,
           isActive: true
         });
+
+        let isProductSpecific = false;
+        if (!voucher) {
+          // Check embedded vouchers in product
+          const productVoucher = product.vouchers?.find(v => v.code === normalizedCode);
+          if (productVoucher) {
+            voucher = {
+              _id: null,
+              code: productVoucher.code,
+              discountType: 'fixed',
+              discountValue: productVoucher.value,
+              usageLimit: productVoucher.quantity,
+              usageCount: 0, // In simple embedded vouchers, tracking usage is harder, but we can check limits if stored
+              validFrom: productVoucher.startDate,
+              validUntil: productVoucher.expiryDate,
+              minimumOrder: 0,
+              calculateDiscount: function(total) { return Math.min(this.discountValue, total); }
+            };
+            isProductSpecific = true;
+          }
+        }
 
         if (!voucher) {
           return res.status(400).json({
@@ -64,14 +86,30 @@ class OrderController {
           });
         }
 
-        if (voucher.validFrom && new Date() < voucher.validFrom) {
+        // Check for duplicate usage by this user
+        const existingOrder = await Order.findOne({
+          customerEmail: customerEmail.toLowerCase(),
+          voucherCode: normalizedCode,
+          status: { $ne: 'cancelled' }
+        });
+        if (existingOrder) {
           return res.status(400).json({
             success: false,
-            message: 'Voucher chưa có hiệu lực'
+            message: 'Bạn đã sử dụng mã voucher này rồi'
           });
         }
 
-        if (voucher.validUntil && new Date() > voucher.validUntil) {
+        const now = new Date();
+        const validFrom = voucher.validFrom || voucher.startDate;
+        if (validFrom && now < new Date(validFrom)) {
+          return res.status(400).json({
+            success: false,
+            message: 'Voucher chưa đến thời gian áp dụng'
+          });
+        }
+
+        const validUntil = voucher.validUntil || voucher.expiryDate;
+        if (validUntil && now > new Date(validUntil)) {
           return res.status(400).json({
             success: false,
             message: 'Voucher đã hết hạn'
@@ -85,6 +123,7 @@ class OrderController {
           });
         }
 
+<<<<<<< HEAD
         if (voucher.applicableProduct && voucher.applicableProduct.toString() !== productId.toString()) {
           return res.status(400).json({
             success: false,
@@ -94,6 +133,9 @@ class OrderController {
 
 
         if (totalPrice < voucher.minimumOrder) {
+=======
+        if (totalPrice < (voucher.minimumOrder || 0)) {
+>>>>>>> 3e0d8eedeece0e9636871edc33464429ec4d874a
           return res.status(400).json({
             success: false,
             message: `Tổng tiền tối thiểu phải từ ${voucher.minimumOrder.toLocaleString()} VND`
@@ -103,8 +145,29 @@ class OrderController {
         discount = voucher.calculateDiscount(totalPrice);
         finalPrice = Math.max(0, totalPrice - discount);
         voucherId = voucher._id;
-        voucher.usageCount = (voucher.usageCount || 0) + 1;
-        await voucher.save();
+
+        // Deduction logic
+        if (isProductSpecific) {
+          // Decrement embedded voucher quantity in ProductService
+          await ProductService.updateOne(
+            { _id: productId, 'vouchers.code': normalizedCode },
+            { $inc: { 'vouchers.$.quantity': -1 } }
+          );
+          // Also try to update the standalone voucher usage count if it exists
+          await Voucher.updateOne(
+            { code: normalizedCode },
+            { $inc: { usageCount: 1 } }
+          );
+        } else if (voucher._id) {
+          // Increment usage count for global voucher
+          await Voucher.findByIdAndUpdate(voucher._id, { $inc: { usageCount: 1 } });
+          
+          // Also try to update embedded vouchers in products that might have this code
+          await ProductService.updateMany(
+            { 'vouchers.code': normalizedCode },
+            { $inc: { 'vouchers.$.quantity': -1 } }
+          );
+        }
       }
 
       // Create order

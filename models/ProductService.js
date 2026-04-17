@@ -137,6 +137,27 @@ const productServiceSchema = new mongoose.Schema({
     certificate: String  // đường dẫn file chứng nhận
   }],
 
+  vouchers: [{
+    code: {
+      type: String,
+      trim: true
+    },
+    quantity: {
+      type: Number,
+      min: 0
+    },
+    startDate: {
+      type: Date
+    },
+    expiryDate: {
+      type: Date
+    },
+    value: {
+      type: Number,
+      min: 0
+    }
+  }],
+
   createdAt: {
     type: Date,
     default: Date.now

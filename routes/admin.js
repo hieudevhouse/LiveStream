@@ -128,10 +128,20 @@ router.delete('/api/products/:id', authAdmin, async (req, res) => {
 // --- Orders API ---
 router.get('/api/orders', authAdmin, async (req, res) => {
     try {
-        const orders = await Order.find().populate('items.productId').sort({ createdAt: -1 });
+        const orders = await Order.find().populate('product').sort({ createdAt: -1 });
         res.json({ success: true, data: orders });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
+    }
+});
+
+router.put('/api/orders/:id/status', authAdmin, async (req, res) => {
+    try {
+        const { status } = req.body;
+        const updated = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true });
+        res.json({ success: true, data: updated });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
     }
 });
 
