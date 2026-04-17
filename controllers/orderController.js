@@ -8,6 +8,8 @@ class OrderController {
     try {
       const {
         productId,
+        giftId,
+        isGift,
         quantity,
         customerName,
         customerEmail,
@@ -30,29 +32,34 @@ class OrderController {
         });
       }
 
-      // Get product
-      const product = await ProductService.findById(productId)
-        .populate('businessOwnerId');
-
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: 'Sản phẩm/dịch vụ không tìm thấy'
-        });
-      }
-
       // Calculate prices
       const quantityNumber = parseInt(quantity, 10) || 1;
+
+      // Get product or gift
+      let product = null;
+      let gift = null;
+      let price = 0;
       
-      // Stock check
-      if (product.pricing?.stock != null && product.pricing.stock < quantityNumber) {
-        return res.status(400).json({
-          success: false,
-          message: `Sản phẩm này chỉ còn ${product.pricing.stock} đơn vị trong kho.`
-        });
+      if (isGift) {
+        const Gift = require('../models/Gift');
+        gift = await Gift.findById(giftId);
+        if (!gift) return res.status(404).json({ success: false, message: 'Quà tặng không tìm thấy' });
+        
+        const existingGiftOrder = await Order.findOne({ customerPhone, isGift: true, status: { $ne: 'cancelled' } });
+        if (existingGiftOrder) return res.status(400).json({ success: false, message: `Số điện thoại ${customerPhone} đã nhận quà trước đó. Mỗi số điện thoại chỉ được nhận 1 lần.` });
+        
+        if (gift.stock < quantityNumber) return res.status(400).json({ success: false, message: 'Quà tặng đã hết hàng.' });
+        price = 0;
+      } else {
+        product = await ProductService.findById(productId).populate('businessOwnerId');
+        if (!product) return res.status(404).json({ success: false, message: 'Sản phẩm/dịch vụ không tìm thấy' });
+        
+        if (product.pricing?.stock != null && product.pricing.stock < quantityNumber) {
+          return res.status(400).json({ success: false, message: `Sản phẩm này chỉ còn ${product.pricing.stock} đơn vị trong kho.` });
+        }
+        price = product.pricing?.baseCost || product.booking?.totalPrice || 0;
       }
 
-      const price = product.pricing?.baseCost || product.booking?.totalPrice || 0;
       const totalPrice = price * quantityNumber;
 
       // Apply voucher if provided
@@ -169,7 +176,7 @@ class OrderController {
       }
 
       // Create order
-      const order = new Order({
+      const orderParams = {
         customerName,
         customerEmail,
         customerPhone,
@@ -178,8 +185,6 @@ class OrderController {
         district,
         city,
         postalCode,
-        product: productId,
-        businessOwner: product.businessOwnerId._id,
         quantity: quantityNumber,
         price,
         totalPrice,
@@ -188,26 +193,52 @@ class OrderController {
         paymentMethod,
         notes,
         voucher: voucherId,
-        voucherCode: voucherCode?.toUpperCase()
-      });
+        voucherCode: voucherCode?.toUpperCase(),
+        isGift: !!isGift
+      };
+
+      if (isGift) {
+        orderParams.gift = giftId;
+      } else {
+        orderParams.product = productId;
+        orderParams.businessOwner = product.businessOwnerId._id;
+      }
+
+      const order = new Order(orderParams);
 
       await order.save();
 
-      // Decrement stock in ProductService and get new stock value
+      // Decrement stock and get new stock value
       let newStock = null;
-      if (product.pricing?.stock != null) {
-        const updatedProduct = await ProductService.findByIdAndUpdate(
-          productId,
-          { $inc: { 'pricing.stock': -quantityNumber } },
-          { new: true }  // return updated document
+      if (isGift) {
+        const Gift = require('../models/Gift');
+        const updatedGift = await Gift.findByIdAndUpdate(
+          giftId,
+          { $inc: { stock: -quantityNumber } },
+          { new: true }
         );
-        newStock = updatedProduct?.pricing?.stock ?? null;
+        newStock = updatedGift?.stock ?? null;
+      } else {
+        if (product.pricing?.stock != null) {
+          const updatedProduct = await ProductService.findByIdAndUpdate(
+            productId,
+            { $inc: { 'pricing.stock': -quantityNumber } },
+            { new: true }
+          );
+          newStock = updatedProduct?.pricing?.stock ?? null;
+        }
       }
 
       // Populate for response
-      await order.populate('product', 'name businessField');
-      await order.populate('businessOwner', 'name email contactPhone');
-      await order.populate('voucher', 'code name');
+      if (!isGift) {
+        await order.populate('product', 'name businessField');
+        await order.populate('businessOwner', 'name email contactPhone');
+      } else {
+        await order.populate('gift', 'name codes imageUrl');
+      }
+      if (voucherId) {
+        await order.populate('voucher', 'code name');
+      }
 
       res.status(201).json({
         success: true,
@@ -468,6 +499,28 @@ class OrderController {
       res.status(500).json({
         success: false,
         message: 'Lỗi khi hủy đơn hàng'
+      });
+    }
+  }
+
+  // Get orders by phone (Public)
+  async getOrdersByPhone(req, res) {
+    try {
+      const { phone } = req.params;
+      const orders = await Order.find({ customerPhone: phone })
+        .populate('product', 'name price description.images')
+        .populate('gift', 'name imageUrl')
+        .sort({ createdAt: -1 });
+
+      res.json({
+        success: true,
+        data: orders
+      });
+    } catch (error) {
+      console.error('Error tracking by phone:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Lỗi hệ thống khi truy xuất đơn hàng'
       });
     }
   }

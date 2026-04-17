@@ -36,7 +36,7 @@ const seedAdmin = async () => {
     console.log('Admin account seeded successfully:');
     console.log(`Email: ${adminEmail}`);
     console.log(`Password: ${adminPassword}`);
-    
+
     process.exit(0);
   } catch (err) {
     console.error('Error seeding admin:', err);

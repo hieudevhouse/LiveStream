@@ -35,6 +35,7 @@ app.use('/api/collaboration-needs', require('./routes/collaborationNeeds'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/vouchers', require('./routes/vouchers'));
+app.use('/api/gifts', require('./routes/gifts'));
 app.use('/admin', require('./routes/admin'));
 
 // Health check

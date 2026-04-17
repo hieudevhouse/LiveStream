@@ -1,9 +1,14 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title><%= pageTitle %></title>
+  <title>
+    <%= pageTitle %>
+  </title>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     :root {
       color-scheme: light;
@@ -11,99 +16,629 @@
       font-smooth: always;
       text-rendering: optimizeLegibility;
     }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 55%, #ffffff 100%); color: #0f172a; }
-    a { color: inherit; text-decoration: none; }
-    button, input, select, textarea { font: inherit; }
-    .page { width: min(1200px, 100%); margin: 0 auto; padding: 24px 20px 40px; }
-    .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
-    .brand { font-size: 1.5rem; font-weight: 800; color: #1d4ed8; }
-    .nav-links { display: flex; gap: 18px; align-items: center; }
-    .nav-links a { padding: 10px 16px; border-radius: 999px; transition: background 0.2s ease; }
-    .nav-links a:hover { background: rgba(59, 130, 246, 0.08); }
-    .hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 32px; align-items: center; margin-bottom: 40px; }
-    .hero-title { font-size: clamp(2.5rem, 2rem + 1.5vw, 4rem); line-height: 1.05; margin: 0; }
-    .hero-title span { color: #2563eb; }
-    .hero-text { margin: 24px 0 0; font-size: 1.05rem; line-height: 1.75; max-width: 640px; color: #475569; }
-    .hero-actions { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 14px; }
-    .btn { border: none; cursor: pointer; border-radius: 14px; font-weight: 700; padding: 14px 22px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .btn:hover { transform: translateY(-1px); }
-    .btn-primary { background: #2563eb; color: white; }
-    .btn-secondary { background: #e2e8f0; color: #0f172a; }
-    .btn:disabled { cursor: not-allowed; opacity: 0.55; transform: none; box-shadow: none; }
-    .hero-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 32px; }
-    .stat-card { background: white; border-radius: 24px; padding: 24px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.06); }
-    .stat-value { font-size: 2rem; font-weight: 800; color: #2563eb; margin: 0; }
-    .stat-label { margin: 8px 0 0; color: #475569; font-size: 0.95rem; }
-    .content-grid { display: flex; flex-direction: column; gap: 30px; max-width: 1000px; margin: 0 auto; }
-    .sidebar { background: white; border-radius: 28px; padding: 32px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.05); border: 1px solid #e2e8f0; text-align: center; }
-    .sidebar h2 { margin-top: 0; font-size: 1.5rem; color: #0f172a; }
-    .section-intro-center { color: #475569; line-height: 1.75; max-width: 600px; margin: 12px auto 0; font-size: 1rem; }
-    .steps { list-style: none; padding: 0; margin: 32px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; text-align: left; }
-    .steps li { border-radius: 20px; padding: 20px; display: flex; align-items: flex-start; gap: 16px; border: 1px solid #e2e8f0; transition: all 0.3s ease; background: #f8fafc; }
-    .steps li.active { border-color: #2563eb; background: #eff6ff; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
-    .steps li span { flex-shrink: 0; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 999px; background: white; border: 1px solid #cbd5e1; color: #475569; font-weight: 700; font-size: 1.1rem; transition: all 0.3s ease; }
-    .steps li.active span { background: #2563eb; border-color: #2563eb; color: white; }
-    .steps li h3 { margin: 0; font-size: 1.05rem; font-weight: 700; color: #0f172a; }
-    .steps li p { margin: 8px 0 0; color: #64748b; font-size: 0.92rem; line-height: 1.5; }
-    .form-panel { background: white; border-radius: 28px; padding: 32px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.05); }
-    .form-section { display: none; }
-    .form-section.active { display: block; }
-    .section-title { display: flex; align-items: center; gap: 14px; margin: 0 0 18px; font-size: 1.2rem; font-weight: 700; }
-    .section-intro { margin: 0 0 24px; color: #475569; line-height: 1.75; }
-    .grid-2 { display: grid; gap: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .field { margin-bottom: 20px; }
-    .field label { display: block; margin-bottom: 10px; font-size: 0.95rem; font-weight: 600; color: #0f172a; }
-    .field input, .field select, .field textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 16px; padding: 14px 16px; font-size: 0.95rem; color: #0f172a; background: #ffffff; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-    .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); }
-    .field textarea { min-height: 140px; resize: vertical; }
-    .email-wrapper { position: relative; }
-    .email-status { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 0.9rem; }
-    .email-status.loading { color: #f59e0b; }
-    .email-status.valid { color: #059669; }
-    .email-status.error { color: #dc2626; }
-    .email-status.checking::after { content: ''; display: inline-block; width: 14px; height: 14px; border: 2px solid #f59e0b; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .email-status-icon { width: 16px; height: 16px; display: inline-block; }
-    .input-row { display: grid; gap: 20px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .checkbox-grid { display: grid; gap: 14px; }
-    .checkbox-card { display: flex; align-items: flex-start; gap: 14px; border: 1px solid #e2e8f0; border-radius: 20px; padding: 18px; background: #f8fafc; }
-    .checkbox-card input { margin-top: 6px; width: 18px; height: 18px; accent-color: #2563eb; }
-    .checkbox-card h4 { margin: 0; font-size: 1rem; }
-    .checkbox-card p { margin: 8px 0 0; color: #475569; font-size: 0.95rem; line-height: 1.6; }
-    .card { border-radius: 24px; background: #f8fafc; padding: 22px; border: 1px solid #e2e8f0; }
-    .card p { margin: 0; color: #475569; }
-    .actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 28px; }
-    .actions .btn { min-width: 160px; }
-    .message { padding: 18px 22px; border-radius: 20px; margin-bottom: 24px; display: none; white-space: pre-wrap; word-wrap: break-word; font-size: 0.95rem; line-height: 1.6; }
-    .message.visible { display: block; }
-    .message.success { background: #ecfdf5; color: #065f46; border: 1px solid #bbf7d0; }
-    .message.error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-    .summary-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .slot-card { border: 1px solid #e2e8f0; border-radius: 20px; overflow: hidden; background: white; }
-    .slot-header { display: flex; justify-content: space-between; gap: 12px; padding: 18px 20px; }
-    .slot-header strong { display: block; font-size: 1rem; }
-    .slot-body { padding: 0 20px 18px; color: #475569; font-size: 0.93rem; line-height: 1.6; }
-    .slot-footer { padding: 14px 20px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .slot-meta { font-size: 0.88rem; color: #475569; }
-    .select-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-    .select-row input[type="number"] { width: 80px; }
-    .popup-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 24px; }
-    .popup-overlay.visible { display: flex; }
-    .popup-card { width: min(500px, 100%); background: white; border-radius: 28px; padding: 32px 28px; box-shadow: 0 32px 80px rgba(15, 23, 42, 0.2); text-align: center; position: relative; }
-    .popup-card h2 { margin: 0 0 16px; font-size: 2rem; color: #0f172a; }
-    .popup-card p { margin: 0 0 24px; color: #475569; line-height: 1.7; }
-    .popup-card .btn { width: 100%; }
-    .popup-close { position: absolute; top: 18px; right: 18px; width: 36px; height: 36px; border: none; background: transparent; color: #64748b; font-size: 1.2rem; cursor: pointer; }
-    .voucher-section { margin-top: 24px; padding-top: 20px; border-top: 1px dashed #e2e8f0; }
-    .voucher-title { font-size: 1rem; font-weight: 700; color: #1e40af; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-    .voucher-title i { font-style: normal; }
-    .voucher-title i { font-style: normal; }
-    .hidden { display: none !important; }
-    .product-card { margin-bottom: 32px; border: 2px solid #e2e8f0; }
-    @media (max-width: 1024px) { .hero { grid-template-columns: 1fr; } .content-grid { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } .summary-grid { grid-template-columns: 1fr; } .steps { grid-template-columns: 1fr; } }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 55%, #ffffff 100%);
+      color: #0f172a;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .page {
+      width: min(1200px, 100%);
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+    .brand {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #1d4ed8;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      padding: 10px 16px;
+      border-radius: 999px;
+      transition: background 0.2s ease;
+    }
+
+    .nav-links a:hover {
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 32px;
+      align-items: center;
+      margin-bottom: 40px;
+    }
+
+    .hero-title {
+      font-size: clamp(2.5rem, 2rem + 1.5vw, 4rem);
+      line-height: 1.05;
+      margin: 0;
+    }
+
+    .hero-title span {
+      color: #2563eb;
+    }
+
+    .hero-text {
+      margin: 24px 0 0;
+      font-size: 1.05rem;
+      line-height: 1.75;
+      max-width: 640px;
+      color: #475569;
+    }
+
+    .hero-actions {
+      margin-top: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      border-radius: 14px;
+      font-weight: 700;
+      padding: 14px 22px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .hero-card {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.06);
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #2563eb;
+      margin: 0;
+    }
+
+    .stat-label {
+      margin: 8px 0 0;
+      color: #475569;
+      font-size: 0.95rem;
+    }
+
+    .content-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .sidebar {
+      background: white;
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.05);
+      border: 1px solid #e2e8f0;
+      text-align: center;
+    }
+
+    .sidebar h2 {
+      margin-top: 0;
+      font-size: 1.5rem;
+      color: #0f172a;
+    }
+
+    .section-intro-center {
+      color: #475569;
+      line-height: 1.75;
+      max-width: 600px;
+      margin: 12px auto 0;
+      font-size: 1rem;
+    }
+
+    .steps {
+      list-style: none;
+      padding: 0;
+      margin: 32px 0 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      text-align: left;
+    }
+
+    .steps li {
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.3s ease;
+      background: #f8fafc;
+    }
+
+    .steps li.active {
+      border-color: #2563eb;
+      background: #eff6ff;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .steps li span {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: white;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      font-weight: 700;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+    }
+
+    .steps li.active span {
+      background: #2563eb;
+      border-color: #2563eb;
+      color: white;
+    }
+
+    .steps li h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .steps li p {
+      margin: 8px 0 0;
+      color: #64748b;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .form-panel {
+      background: white;
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: 0 24px 80px rgba(15, 23, 42, 0.05);
+    }
+
+    .form-section {
+      display: none;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 0 0 18px;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .section-intro {
+      margin: 0 0 24px;
+      color: #475569;
+      line-height: 1.75;
+    }
+
+    .grid-2 {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 0.95rem;
+      color: #0f172a;
+      background: #ffffff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    }
+
+    .field textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .email-wrapper {
+      position: relative;
+    }
+
+    .email-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 0.9rem;
+    }
+
+    .email-status.loading {
+      color: #f59e0b;
+    }
+
+    .email-status.valid {
+      color: #059669;
+    }
+
+    .email-status.error {
+      color: #dc2626;
+    }
+
+    .email-status.checking::after {
+      content: '';
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #f59e0b;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .email-status-icon {
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+    }
+
+    .input-row {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .checkbox-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .checkbox-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 18px;
+      background: #f8fafc;
+    }
+
+    .checkbox-card input {
+      margin-top: 6px;
+      width: 18px;
+      height: 18px;
+      accent-color: #2563eb;
+    }
+
+    .checkbox-card h4 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .checkbox-card p {
+      margin: 8px 0 0;
+      color: #475569;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .card {
+      border-radius: 24px;
+      background: #f8fafc;
+      padding: 22px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .card p {
+      margin: 0;
+      color: #475569;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .actions .btn {
+      min-width: 160px;
+    }
+
+    .message {
+      padding: 18px 22px;
+      border-radius: 20px;
+      margin-bottom: 24px;
+      display: none;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .message.visible {
+      display: block;
+    }
+
+    .message.success {
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #bbf7d0;
+    }
+
+    .message.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+
+    .summary-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .slot-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .slot-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 20px;
+    }
+
+    .slot-header strong {
+      display: block;
+      font-size: 1rem;
+    }
+
+    .slot-body {
+      padding: 0 20px 18px;
+      color: #475569;
+      font-size: 0.93rem;
+      line-height: 1.6;
+    }
+
+    .slot-footer {
+      padding: 14px 20px;
+      background: #f8fafc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slot-meta {
+      font-size: 0.88rem;
+      color: #475569;
+    }
+
+    .select-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .select-row input[type="number"] {
+      width: 80px;
+    }
+
+    .popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+    }
+
+    .popup-overlay.visible {
+      display: flex;
+    }
+
+    .popup-card {
+      width: min(500px, 100%);
+      background: white;
+      border-radius: 28px;
+      padding: 32px 28px;
+      box-shadow: 0 32px 80px rgba(15, 23, 42, 0.2);
+      text-align: center;
+      position: relative;
+    }
+
+    .popup-card h2 {
+      margin: 0 0 16px;
+      font-size: 2rem;
+      color: #0f172a;
+    }
+
+    .popup-card p {
+      margin: 0 0 24px;
+      color: #475569;
+      line-height: 1.7;
+    }
+
+    .popup-card .btn {
+      width: 100%;
+    }
+
+    .popup-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .voucher-section {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px dashed #e2e8f0;
+    }
+
+    .voucher-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .voucher-title i {
+      font-style: normal;
+    }
+
+    .voucher-title i {
+      font-style: normal;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .product-card {
+      margin-bottom: 32px;
+      border: 2px solid #e2e8f0;
+    }
+
+    @media (max-width: 1024px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
+
 <body>
   <div class="page">
     <header class="header">
@@ -113,7 +648,9 @@
     <section class="hero" id="features">
       <div>
         <h1 class="hero-title">Giao diện đăng ký nhãn hàng và sản phẩm <span>với Dreamax</span></h1>
-        <p class="hero-text">Nền tảng Dreamax cung cấp giải pháp quản lý nhãn hàng và sản phẩm toàn diện. Bạn có thể đăng ký thông tin nhãn hàng, quản lý nhiều sản phẩm cùng lúc và theo dõi hiệu suất bán hàng trên nền tảng của chúng tôi.</p>
+        <p class="hero-text">Nền tảng Dreamax cung cấp giải pháp quản lý nhãn hàng và sản phẩm toàn diện. Bạn có thể
+          đăng ký thông tin nhãn hàng, quản lý nhiều sản phẩm cùng lúc và theo dõi hiệu suất bán hàng trên nền tảng của
+          chúng tôi.</p>
       </div>
       <div class="hero-card">
         <div class="stat-card">
@@ -138,11 +675,27 @@
     <div class="content-grid" id="register">
       <aside class="sidebar">
         <h2>Hướng dẫn đăng ký</h2>
-        <p class="section-intro-center">Hoàn thành 3 bước sau để đăng ký nhãn hàng và sản phẩm với Dreamax. Dữ liệu sẽ được lưu và xử lý ngay tức thì.</p>
+        <p class="section-intro-center">Hoàn thành 3 bước sau để đăng ký nhãn hàng và sản phẩm với Dreamax. Dữ liệu sẽ
+          được lưu và xử lý ngay tức thì.</p>
         <ul class="steps" id="sidebarSteps">
-          <li class="active" data-step="1"><span>1</span><div><h3>Thông tin nhãn hàng</h3><p>Nhập tên, kiểu hình sở hữu, liên hệ.</p></div></li>
-          <li data-step="2"><span>2</span><div><h3>Sản phẩm</h3><p>Thêm các sản phẩm của nhãn hàng.</p></div></li>
-          <li data-step="3"><span>3</span><div><h3>Nhu cầu hỗ trợ</h3><p>Chọn dịch vụ hỗ trợ bạn cần.</p></div></li>
+          <li class="active" data-step="1"><span>1</span>
+            <div>
+              <h3>Thông tin nhãn hàng</h3>
+              <p>Nhập tên, kiểu hình sở hữu, liên hệ.</p>
+            </div>
+          </li>
+          <li data-step="2"><span>2</span>
+            <div>
+              <h3>Sản phẩm</h3>
+              <p>Thêm các sản phẩm của nhãn hàng.</p>
+            </div>
+          </li>
+          <li data-step="3"><span>3</span>
+            <div>
+              <h3>Nhu cầu hỗ trợ</h3>
+              <p>Chọn dịch vụ hỗ trợ bạn cần.</p>
+            </div>
+          </li>
         </ul>
       </aside>
 
@@ -165,7 +718,8 @@
               </div>
               <div class="field">
                 <label for="businessName">Tên nhãn hàng</label>
-                <input id="businessName" name="businessInfo[businessName]" type="text" placeholder="Tên nhãn hàng / thương hiệu" required />
+                <input id="businessName" name="businessInfo[businessName]" type="text"
+                  placeholder="Tên nhãn hàng / thương hiệu" required />
               </div>
             </div>
             <div class="field">
@@ -176,7 +730,8 @@
             <div class="grid-2">
               <div class="field">
                 <label for="taxCode">Mã số thuế / CMND</label>
-                <input id="taxCode" name="businessInfo[taxCode]" type="text" placeholder="Mã số thuế hoặc CMND" required />
+                <input id="taxCode" name="businessInfo[taxCode]" type="text" placeholder="Mã số thuế hoặc CMND"
+                  required />
               </div>
               <div class="field">
                 <label for="address">Địa chỉ</label>
@@ -202,16 +757,19 @@
             <div class="grid-2">
               <div class="field">
                 <label for="contactName">Tên người liên hệ</label>
-                <input id="contactName" name="businessInfo[contactRepresentative][name]" type="text" placeholder="Người phụ trách" required />
+                <input id="contactName" name="businessInfo[contactRepresentative][name]" type="text"
+                  placeholder="Người phụ trách" required />
               </div>
               <div class="field">
                 <label for="contactPhone">Điện thoại liên hệ</label>
-                <input id="contactPhone" name="businessInfo[contactRepresentative][phone]" type="text" placeholder="Số điện thoại" required />
+                <input id="contactPhone" name="businessInfo[contactRepresentative][phone]" type="text"
+                  placeholder="Số điện thoại" required />
               </div>
             </div>
             <div class="field">
               <label for="contactEmail">Email người liên hệ</label>
-              <input id="contactEmail" name="businessInfo[contactRepresentative][email]" type="email" placeholder="Email liên hệ" required />
+              <input id="contactEmail" name="businessInfo[contactRepresentative][email]" type="email"
+                placeholder="Email liên hệ" required />
             </div>
           </section>
 
@@ -228,22 +786,39 @@
             <div class="section-title">3. Nhu cầu hỗ trợ</div>
             <p class="section-intro">Chọn các dịch vụ hỗ trợ từ Dreamax mà bạn quan tâm.</p>
             <div class="checkbox-grid">
-              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]" value="product_service_promotion" />
-                <div><h4>Hỗ trợ tiếp thị</h4><p>Hỗ trợ quảng bá sản phẩm và xây dựng thương hiệu.</p></div>
+              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]"
+                  value="product_service_promotion" />
+                <div>
+                  <h4>Hỗ trợ tiếp thị</h4>
+                  <p>Hỗ trợ quảng bá sản phẩm và xây dựng thương hiệu.</p>
+                </div>
               </label>
-              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]" value="market_development" />
-                <div><h4>Mở rộng thị trường</h4><p>Hỗ trợ phân phối, logistics và quản lý kho.</p></div>
+              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]"
+                  value="market_development" />
+                <div>
+                  <h4>Mở rộng thị trường</h4>
+                  <p>Hỗ trợ phân phối, logistics và quản lý kho.</p>
+                </div>
               </label>
-              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]" value="investment_connection" />
-                <div><h4>Tư vấn kinh doanh</h4><p>Hỗ trợ chiến lược bán hàng và phát triển sản phẩm.</p></div>
+              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]"
+                  value="investment_connection" />
+                <div>
+                  <h4>Tư vấn kinh doanh</h4>
+                  <p>Hỗ trợ chiến lược bán hàng và phát triển sản phẩm.</p>
+                </div>
               </label>
-              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]" value="policy_advocacy" />
-                <div><h4>Dịch vụ khác</h4><p>Các dịch vụ hỗ trợ bổ sung khác từ Dreamax.</p></div>
+              <label class="checkbox-card"><input type="checkbox" name="collaborationNeeds[needs][][type]"
+                  value="policy_advocacy" />
+                <div>
+                  <h4>Dịch vụ khác</h4>
+                  <p>Các dịch vụ hỗ trợ bổ sung khác từ Dreamax.</p>
+                </div>
               </label>
             </div>
             <div class="field">
               <label for="needsDescription">Mô tả chi tiết nhu cầu</label>
-              <textarea id="needsDescription" name="collaborationNeeds[needs][][description]" placeholder="Mô tả thêm nhu cầu hỗ trợ của bạn"></textarea>
+              <textarea id="needsDescription" name="collaborationNeeds[needs][][description]"
+                placeholder="Mô tả thêm nhu cầu hỗ trợ của bạn"></textarea>
             </div>
           </section>
 
@@ -322,7 +897,7 @@
           </div>
           <div class="field">
             <label for="generalDescription_${index}">Mô tả sản phẩm</label>
-            <textarea id="generalDescription_${index}" name="productServices[${index}][generalDescription]" placeholder="Mô tả chi tiết về sản phẩm, tính năng, lợi ích cho khách hàng" required></textarea>
+            <textarea id="generalDescription_${index}" name="productServices[${index}][generalDescription]" placeholder="Mô tả chi tiết về sản phẩm, tính năng, lợi ích cho khách hàng (Tối đa 150 ký tự)" maxlength="150" required></textarea>
           </div>
           <div class="grid-2">
             <div class="field">
@@ -353,7 +928,7 @@
             <small style="color: #64748b; margin-top: 8px; display: block;">JPG, PNG hoặc GIF. Tối đa 5MB mỗi ảnh.</small>
           </div>
           <div class="voucher-section">
-            <div class="voucher-title">🎟️ Chương trình Voucher / Khuyến mãi</div>
+            <div class="voucher-title">🎟️ Chương trình Voucher / Khuyến mãi (Điền nếu có)</div>
             <div class="grid-2">
               <div class="field">
                 <label for="voucherCode_${index}">Mã Voucher</label>
@@ -405,14 +980,14 @@
     function addProductService() {
       const html = createProductServiceCard(nextProductIndex);
       productServicesContainer.insertAdjacentHTML('beforeend', html);
-      
+
       // Bind action cho nút X vừa mới add
       const newCard = productServicesContainer.lastElementChild;
       const removeBtn = newCard.querySelector('.removeProductServiceButton');
       if (removeBtn) {
         removeBtn.addEventListener('click', onRemoveProductService);
       }
-      
+
       nextProductIndex += 1;
     }
 
@@ -431,15 +1006,37 @@
       window.scrollTo({ top: document.querySelector('.form-panel').offsetTop - 20, behavior: 'smooth' });
     }
 
+    // SweetAlert2 Toast configuration
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true
+    });
+
+    function notify(m, icon = 'success') {
+      Toast.fire({
+        icon: icon,
+        title: m
+      });
+    }
+
     function showMessage(type, text) {
-      messageBox.textContent = text;
-      messageBox.className = 'message visible ' + type;
-      messageBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (type === 'error') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Thông báo',
+          text: text,
+          confirmButtonColor: '#15803d'
+        });
+      } else {
+        notify(text, type);
+      }
     }
 
     function clearMessage() {
-      messageBox.className = 'message';
-      messageBox.textContent = '';
+      // Logic managed by SweetAlert2
     }
 
     const compressImage = async (file, { quality = 0.7, maxWidth = 1920, maxHeight = 1920 } = {}) => {
@@ -491,7 +1088,7 @@
       const formData = new FormData(form);
       const fileEntries = [];
       const keysToDelete = new Set();
-      
+
       for (const [key, value] of formData.entries()) {
         if (value instanceof File) {
           if (value.name && value.size > 0) {
@@ -509,7 +1106,7 @@
 
       for (let i = 0; i < fileEntries.length; i++) {
         const entry = fileEntries[i];
-        submitButton.textContent = `Đang nén file (${i+1}/${fileEntries.length})...`;
+        submitButton.textContent = `Đang nén file (${i + 1}/${fileEntries.length})...`;
         const compressedFile = await compressImage(entry.file);
         formData.append(entry.key, compressedFile);
       }
@@ -535,8 +1132,8 @@
 
         if (!productName) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập tên sản phẩm`);
         if (!businessField) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập danh mục sản phẩm`);
-        if (baseCost === '' || Number(baseCost) < 0) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập giá sản phẩm hợp lệ`);
-        if (stock === '' || Number(stock) < 0) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập số lượng sản phẩm hợp lệ`);
+        if (baseCost === '' || isNaN(Number(baseCost)) || Number(baseCost) < 0) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập giá sản phẩm hợp lệ (vui lòng nhập số)`);
+        if (stock === '' || isNaN(Number(stock)) || Number(stock) < 0 || !Number.isInteger(Number(stock))) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập số lượng sản phẩm hợp lệ (số nguyên >= 0)`);
         if (!generalDescription) errors.push(`Sản phẩm ${i + 1}: Vui lòng nhập mô tả sản phẩm`);
       }
 
@@ -560,18 +1157,49 @@
       const contactPhone = document.getElementById('contactPhone').value.trim();
       const contactEmail = document.getElementById('contactEmail').value.trim();
 
+      const phoneRegex = /^(0|\+84)[0-9]{8,9}$/;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const taxCodeRegex = /^[a-zA-Z0-9\-]{9,14}$/;
+
       if (!ownershipType) errors.push('Loại hình sở hữu');
       if (!businessName) errors.push('Tên nhãn hàng');
-      if (!taxCode) errors.push('Mã số thuế / CMND');
+
+      if (!taxCode) {
+        errors.push('Mã số thuế / CMND');
+      } else if (!taxCodeRegex.test(taxCode)) {
+        errors.push('Mã số thuế / CMND không đúng định dạng (9-14 số/ký tự)');
+      }
+
       if (!address) errors.push('Địa chỉ');
-      if (!phone) errors.push('Số điện thoại nhãn hàng');
-      if (!email) errors.push('Email liên hệ (chính)');
+
+      if (!phone) {
+        errors.push('Số điện thoại nhãn hàng');
+      } else if (!phoneRegex.test(phone)) {
+        errors.push('Số điện thoại nhãn hàng không đúng định dạng (10 số)');
+      }
+
+      if (!email) {
+        errors.push('Email liên hệ (chính)');
+      } else if (!emailRegex.test(email)) {
+        errors.push('Email liên hệ (chính) không đúng định dạng');
+      }
+
       if (!contactName) errors.push('Tên người liên hệ');
-      if (!contactPhone) errors.push('Điện thoại người liên hệ');
-      if (!contactEmail) errors.push('Email người liên hệ');
+
+      if (!contactPhone) {
+        errors.push('Điện thoại người liên hệ');
+      } else if (!phoneRegex.test(contactPhone)) {
+        errors.push('Điện thoại người liên hệ không đúng định dạng (10 số)');
+      }
+
+      if (!contactEmail) {
+        errors.push('Email người liên hệ');
+      } else if (!emailRegex.test(contactEmail)) {
+        errors.push('Email người liên hệ không đúng định dạng');
+      }
 
       if (errors.length > 0) {
-        showMessage('error', '❌ Bước 1 - Thông tin nhãn hàng chưa đầy đủ, vui lòng điền:\n• ' + errors.join('\n• '));
+        showMessage('error', '❌ Bước 1 - Thông tin chưa hợp lệ, vui lòng kiểm tra lại:\n• ' + errors.join('\n• '));
         return false;
       }
 
@@ -583,7 +1211,7 @@
       // Chỉ validate nếu họ chọn checkbox thì phải có ít nhất một
       const checkboxes = document.querySelectorAll('.form-section[data-step="3"] input[type="checkbox"]');
       const hasCheckedBox = Array.from(checkboxes).some(cb => cb.checked);
-      
+
       // Nếu không chọn gì, vẫn allow submit (optional step)
       clearMessage();
       return true;
@@ -697,22 +1325,22 @@
     const popupCloseIcon = document.querySelector('.popup-close');
 
     function showSuccessPopup(message) {
-      successPopup.querySelector('p').textContent = message;
-      successPopup.classList.add('visible');
+      Swal.fire({
+        icon: 'success',
+        title: 'Thành công',
+        text: message,
+        confirmButtonColor: '#15803d',
+        allowOutsideClick: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.reload();
+        }
+      });
     }
-
-    function hideSuccessPopup() {
-      successPopup.classList.remove('visible');
-    }
-
-    closePopupButton.addEventListener('click', hideSuccessPopup);
-    popupCloseIcon.addEventListener('click', hideSuccessPopup);
-    successPopup.addEventListener('click', (event) => {
-      if (event.target === successPopup) hideSuccessPopup();
-    });
 
     renderProductServices();
     setActiveStep(1);
   </script>
 </body>
+
 </html>

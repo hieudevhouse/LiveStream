@@ -7,6 +7,7 @@ router.post('/', orderController.createOrder);
 router.get('/:orderId', orderController.getOrder);
 router.get('/track/:orderNumber', orderController.trackOrder);
 router.get('/email/:email', orderController.getOrdersByEmail);
+router.get('/phone/:phone', orderController.getOrdersByPhone);
 router.put('/:orderId/cancel', orderController.cancelOrder);
 
 // Admin routes (would need admin middleware in production)

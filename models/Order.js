@@ -46,13 +46,23 @@ const orderSchema = new mongoose.Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'ProductService',
-    required: true
+    required: function() { return !this.isGift; }
   },
 
   businessOwner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'BusinessOwner',
-    required: true
+    required: function() { return !this.isGift; }
+  },
+
+  isGift: {
+    type: Boolean,
+    default: false
+  },
+
+  gift: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Gift'
   },
 
   quantity: {

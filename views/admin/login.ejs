@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         :root {
@@ -257,7 +259,22 @@
     <script>
         const form = document.getElementById('fairLoginForm');
         const loginBtn = document.getElementById('loginEnter');
-        const errorEl = document.getElementById('errorNotify');
+        
+        // SweetAlert2 Toast configuration
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
+
+        function notify(m, icon = 'success') {
+            Toast.fire({
+                icon: icon,
+                title: m
+            });
+        }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -279,16 +296,29 @@
                 
                 if (data.success) {
                     localStorage.setItem('adminToken', data.token);
-                    window.location.href = '/admin';
+                    notify('Đăng nhập thành công! Đang chuyển hướng...');
+                    setTimeout(() => window.location.href = '/admin', 1000);
                 } else {
-                    errorEl.textContent = '❌ ' + (data.message || 'Sai thông tin đăng nhập hội chợ');
-                    errorEl.style.display = 'block';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Đăng nhập thất bại',
+                        text: data.message || 'Sai thông tin đăng nhập hội chợ',
+                        background: '#1e293b',
+                        color: '#fff',
+                        confirmButtonColor: '#15803d'
+                    });
                     loginBtn.disabled = false;
                     loginBtn.innerHTML = 'Vào Cổng Quản Trị 🎋';
                 }
             } catch (err) {
-                errorEl.textContent = '❌ Lỗi kết nối hệ thống điều hành';
-                errorEl.style.display = 'block';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Lỗi hệ thống',
+                    text: 'Không thể kết nối đến máy chủ điều hành',
+                    background: '#1e293b',
+                    color: '#fff',
+                    confirmButtonColor: '#15803d'
+                });
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = 'Vào Cổng Quản Trị 🎋';
             }

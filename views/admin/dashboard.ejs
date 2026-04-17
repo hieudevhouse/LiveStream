@@ -11,6 +11,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
         rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         :root {
@@ -598,6 +600,7 @@
             <li class="menu-item"><a class="menu-link" data-target="orders">💳 Giao dịch Hội chợ</a></li>
             <li class="menu-item"><a class="menu-link" data-target="products">🧺 Danh mục Gian hàng</a></li>
             <li class="menu-item"><a class="menu-link" data-target="vouchers">🧧 Mã Ưu đãi Đặc biệt</a></li>
+            <li class="menu-item"><a class="menu-link" data-target="gifts">🎁 Quản lý Quà tặng</a></li>
         </ul>
 
         <div class="sidebar-footer">
@@ -761,7 +764,32 @@
                 </div>
             </div>
 
-            <!-- PROMO VIEW -->
+            <!-- GIFTS VIEW -->
+            <div id="giftsView" class="view-section">
+                <div class="hub-header">
+                    <div>
+                        <h2>Danh mục Quà tặng</h2>
+                        <p style="color: var(--text-muted);">Quản lý danh sách các phần quà dành cho chương trình khách hàng thân thiết.</p>
+                    </div>
+                    <div>
+                        <button class="btn-fair" onclick="openGiftModal()">+ Thêm Quà tặng mới</button>
+                    </div>
+                </div>
+                <div class="expo-container">
+                    <table class="expo-table" id="giftsTable">
+                        <thead>
+                            <tr>
+                                <th>Quà tặng</th>
+                                <th>Mã nhận quà</th>
+                                <th>Mô tả</th>
+                                <th>Tồn kho</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
             <div id="vouchersView" class="view-section">
                 <div class="hub-header">
                     <div>
@@ -823,7 +851,56 @@
 
     <div class="toast-box" id="toastContainer"></div>
 
-    <!-- PRODUCT MODAL -->
+    <!-- GIFT MODAL -->
+    <div class="overlay" id="giftOverlay">
+        <div class="modal modal-lg">
+            <div class="modal-header-nav">
+                <h3 id="giftModalTitle">Tạo Quà tặng mới</h3>
+                <button class="close-btn" onclick="closeGiftModal()">&times;</button>
+            </div>
+            <form id="giftForm">
+                <input type="hidden" id="giftId">
+                <div class="form-group">
+                    <label>Mã nhận quà (Phân tách bằng dấu phẩy)</label>
+                    <input type="text" id="giftCodes" class="form-input" placeholder="VD: GIFT2024, TET2024" required>
+                    <small style="color: grey;">Mã sẽ tự động chuyển thành IN HOA. Ví dụ: GIFT24, PHUCQUY</small>
+                </div>
+                <div class="form-group">
+                    <label>Tên món quà</label>
+                    <input type="text" id="giftName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label>Mô tả ngắn</label>
+                    <textarea id="giftDescription" class="form-input" style="height: 80px;"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Hình ảnh quà tặng</label>
+                        <div id="giftDropZone" style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background: #f8fafc; position: relative;">
+                            <div id="giftPreviewContainer" style="display: none; margin-bottom: 10px;">
+                                <img id="giftPreviewImg" src="" style="max-height: 120px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                <button type="button" onclick="removeGiftImage(event)" style="position: absolute; top: 10px; right: 10px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-weight: bold;">&times;</button>
+                            </div>
+                            <div id="giftUploadPrompt">
+                                <span style="font-size: 2rem;">📸</span>
+                                <p style="margin-top: 10px; font-size: 0.85rem; color: #64748b;">Kéo thả ảnh hoặc click để chọn</p>
+                            </div>
+                            <input type="file" id="giftFileInput" style="display: none;" accept="image/*">
+                            <input type="hidden" id="giftImageUrl">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Số lượng trong kho</label>
+                        <input type="number" id="giftStock" class="form-input" value="0" required>
+                    </div>
+                </div>
+                <div style="margin-top: 24px; display: flex; gap: 12px;">
+                    <button type="submit" class="btn-fair" style="flex: 1;">💾 Lưu thông tin quà tặng</button>
+                    <button type="button" class="btn-fair" onclick="closeGiftModal()" style="background: #94a3b8;">Hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="overlay" id="productOverlay">
         <div class="modal modal-lg">
             <div class="modal-header-nav">
@@ -1021,15 +1098,26 @@
                 const d = await r.json();
                 if (r.status === 401 || r.status === 403) { localStorage.removeItem('adminToken'); window.location.href = '/admin/login'; return null; }
                 return d;
-            } catch (err) { notify('Expo Alert: Lỗi kết nối hệ thống!'); return null; }
+            } catch (err) { notify('Expo Alert: Lỗi kết nối hệ thống!', 'error'); return null; }
         }
 
-        function notify(m) {
-            const t = document.createElement('div');
-            t.className = 'toast';
-            t.innerHTML = `🎋 ${m}`;
-            document.getElementById('toastContainer').appendChild(t);
-            setTimeout(() => t.remove(), 4000);
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+
+        function notify(m, icon = 'success') {
+            Toast.fire({
+                icon: icon,
+                title: m
+            });
         }
 
         async function loadData(target) {
@@ -1037,6 +1125,7 @@
             if (target === 'orders') loadAllTransactions();
             if (target === 'products') loadExpoCatalog();
             if (target === 'vouchers') loadExpoVouchers();
+            if (target === 'gifts') loadExpoGifts();
         }
 
         async function loadStats() {
@@ -1124,7 +1213,7 @@
                         <div style="font-size: 0.8rem; color: var(--secondary);">${o.customerPhone}</div>
                     </td>
                     <td>
-                        <div style="font-weight: 600;">${o.product?.name || '---'}</div>
+                        <div style="font-weight: 600;">${o.isGift ? '<span style="color:#16a34a">🎁 ' + (o.gift?.name || 'Quà tặng') + '</span>' : (o.product?.name || '---')}</div>
                         <div style="font-size: 0.7rem; color: var(--accent);">Mã Thẻ: ${o.voucherCode || 'Không'}</div>
                     </td>
                     <td><div style="font-weight: 800; color: var(--primary);">${o.finalPrice.toLocaleString()} ₫</div></td>
@@ -1213,7 +1302,27 @@
             if (r && r.success) { notify('Đã cập nhật lộ trình giao dịch!'); closeStatusModal(); loadAllTransactions(); }
         }
 
-        async function delExpo(t, id) { if (!confirm('Expo Monitor: Xóa dữ liệu này?')) return; const r = await fetchExpo(`/admin/api/${t}/${id}`, 'DELETE'); if (r && r.success) { notify('Dữ liệu đã được gỡ khỏi hệ thống.'); loadData(target); } }
+        async function delExpo(t, id) { 
+            const result = await Swal.fire({
+                title: 'Xác nhận xóa?',
+                text: "Dữ liệu này sẽ được gỡ khỏi hệ thống và không thể khôi phục!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#15803d',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Đồng ý xóa',
+                cancelButtonText: 'Hủy'
+            });
+
+            if (result.isConfirmed) { 
+                const r = await fetchExpo(`/admin/api/${t}/${id}`, 'DELETE'); 
+                if (r && r.success) { 
+                    notify('Dữ liệu đã được gỡ khỏi hệ thống.'); 
+                    const activeMenu = document.querySelector('.menu-link.active').dataset.target;
+                    loadData(activeMenu);
+                } 
+            }
+        }
 
         let currOrderObj = null;
         let allBusinessOwners = [];
@@ -1242,15 +1351,22 @@
                 document.getElementById('dtRegion').innerText = `${o.district}, ${o.city}`;
                 document.getElementById('dtNotes').innerText = o.notes || 'Không có';
                 
-                document.getElementById('dtProduct').innerText = o.product?.name || '---';
-                document.getElementById('dtOwner').innerText = o.businessOwner?.businessName || '---';
-                document.getElementById('dtQty').innerText = o.quantity + 'x';
-                document.getElementById('dtPrice').innerText = o.price.toLocaleString() + ' ₫';
+                if (o.isGift) {
+                    document.getElementById('dtProduct').innerText = o.gift?.name || 'QUÀ TẶNG';
+                    document.getElementById('dtOwner').innerText = 'DREAMAX EXPO';
+                    document.getElementById('dtPrice').innerText = '0 ₫';
+                } else {
+                    document.getElementById('dtProduct').innerText = o.product?.name || '---';
+                    document.getElementById('dtOwner').innerText = o.businessOwner?.businessName || '---';
+                    document.getElementById('dtPrice').innerText = (o.price || 0).toLocaleString() + ' ₫';
+                }
                 
-                document.getElementById('dtTotal').innerText = o.totalPrice.toLocaleString() + ' ₫';
+                document.getElementById('dtQty').innerText = o.quantity + 'x';
+                
+                document.getElementById('dtTotal').innerText = (o.totalPrice || 0).toLocaleString() + ' ₫';
                 document.getElementById('dtVoucherCode').innerText = o.voucherCode || 'Không';
-                document.getElementById('dtDiscount').innerText = '-' + o.discount.toLocaleString() + ' ₫';
-                document.getElementById('dtFinal').innerText = o.finalPrice.toLocaleString() + ' ₫';
+                document.getElementById('dtDiscount').innerText = '-' + (o.discount || 0).toLocaleString() + ' ₫';
+                document.getElementById('dtFinal').innerText = (o.finalPrice || 0).toLocaleString() + ' ₫';
 
                 document.getElementById('orderDetailOverlay').style.display = 'flex';
             }
@@ -1380,6 +1496,174 @@
             document.getElementById('voucherOverlay').style.display = 'flex';
         }
 
+        // --- Gift Management ---
+        window.allGiftsData = [];
+        async function loadExpoGifts() {
+            const r = await fetchExpo('/admin/api/gifts');
+            if (r && r.success) {
+                window.allGiftsData = r.data;
+                const tbody = document.querySelector('#giftsTable tbody');
+                tbody.innerHTML = r.data.map(g => `
+                    <tr>
+                        <td>
+                            <div class="product-preview">
+                                <img src="${g.imageUrl || 'https://placehold.co/100?text=Gift'}" class="product-img">
+                                <div class="product-title">${g.name}</div>
+                            </div>
+                        </td>
+                        <td><code style="font-weight: 800; background: #f0fdf4; padding: 4px 8px; border-radius: 6px; color: #16a34a;">${g.codes.join(', ')}</code></td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted);">${g.description || '---'}</td>
+                        <td style="font-weight: 700; color: ${g.stock < 10 ? '#ef4444' : 'var(--text-main)'}">${g.stock} quà</td>
+                        <td>
+                            <button class="action-btn" onclick="openGiftModal('${g._id}')">✏️</button>
+                            <button class="action-btn" onclick="delExpo('gifts', '${g._id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function openGiftModal(id = null) {
+            document.getElementById('giftForm').reset();
+            if (id) {
+                const g = window.allGiftsData.find(x => x._id === id);
+                if (g) {
+                    document.getElementById('giftModalTitle').innerText = 'Chỉnh sửa Quà tặng';
+                    document.getElementById('giftId').value = g._id;
+                    document.getElementById('giftCodes').value = g.codes.join(', ');
+                    document.getElementById('giftName').value = g.name;
+                    document.getElementById('giftDescription').value = g.description || '';
+                    if (g.imageUrl) {
+                        setGiftImage(g.imageUrl);
+                    } else {
+                        resetGiftUploadUI();
+                    }
+                    document.getElementById('giftStock').value = g.stock;
+                }
+            } else {
+                document.getElementById('giftModalTitle').innerText = 'Thêm Quà tặng mới';
+                document.getElementById('giftId').value = '';
+                resetGiftUploadUI();
+            }
+            document.getElementById('giftOverlay').style.display = 'flex';
+        }
+
+        function closeGiftModal() {
+            document.getElementById('giftOverlay').style.display = 'none';
+        }
+
+        // --- Drag & Drop Image Logic ---
+        const giftDropZone = document.getElementById('giftDropZone');
+        const giftFileInput = document.getElementById('giftFileInput');
+        const giftImageUrlInput = document.getElementById('giftImageUrl');
+        const giftPreviewContainer = document.getElementById('giftPreviewContainer');
+        const giftPreviewImg = document.getElementById('giftPreviewImg');
+        const giftUploadPrompt = document.getElementById('giftUploadPrompt');
+
+        giftDropZone.addEventListener('click', () => giftFileInput.click());
+
+        giftDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            giftDropZone.style.borderColor = 'var(--primary)';
+            giftDropZone.style.background = '#f0fdf4';
+        });
+
+        giftDropZone.addEventListener('dragleave', () => {
+            giftDropZone.style.borderColor = '#cbd5e1';
+            giftDropZone.style.background = '#f8fafc';
+        });
+
+        giftDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            giftDropZone.style.borderColor = '#cbd5e1';
+            giftDropZone.style.background = '#f8fafc';
+            const files = e.dataTransfer.files;
+            if (files.length) handleGiftUpload(files[0]);
+        });
+
+        giftFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleGiftUpload(e.target.files[0]);
+        });
+
+        async function handleGiftUpload(file) {
+            if (!file.type.startsWith('image/')) {
+                closeGiftModal();
+                return Swal.fire('Thông báo', 'Vui lòng chọn file hình ảnh!', 'warning');
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+
+            giftUploadPrompt.innerHTML = '<p>🔄 Đang tải lên...</p>';
+
+            try {
+                const res = await fetch('/admin/api/upload', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    setGiftImage(result.url);
+                    notify('Đã tải ảnh lên thành công!');
+                } else {
+                    closeGiftModal();
+                    Swal.fire('Lỗi!', result.message, 'error');
+                    resetGiftUploadUI();
+                }
+            } catch (err) {
+                console.error(err);
+                closeGiftModal();
+                Swal.fire('Lỗi kết nối!', 'Không thể kết nối đến máy chủ khi upload.', 'error');
+                resetGiftUploadUI();
+            }
+        }
+
+        function setGiftImage(url) {
+            giftImageUrlInput.value = url;
+            giftPreviewImg.src = url;
+            giftPreviewContainer.style.display = 'block';
+            giftUploadPrompt.style.display = 'none';
+        }
+
+        function removeGiftImage(e) {
+            e.stopPropagation();
+            resetGiftUploadUI();
+        }
+
+        function resetGiftUploadUI() {
+            giftImageUrlInput.value = '';
+            giftPreviewImg.src = '';
+            giftPreviewContainer.style.display = 'none';
+            giftUploadPrompt.style.display = 'block';
+            giftUploadPrompt.innerHTML = `
+                <span style="font-size: 2rem;">📸</span>
+                <p style="margin-top: 10px; font-size: 0.85rem; color: #64748b;">Kéo thả ảnh hoặc click để chọn</p>
+            `;
+        }
+
+        document.getElementById('giftForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('giftId').value;
+            const payload = {
+                codes: document.getElementById('giftCodes').value,
+                name: document.getElementById('giftName').value,
+                description: document.getElementById('giftDescription').value,
+                imageUrl: document.getElementById('giftImageUrl').value,
+                stock: parseInt(document.getElementById('giftStock').value)
+            };
+
+            const method = id ? 'PUT' : 'POST';
+            const url = id ? `/admin/api/gifts/${id}` : '/admin/api/gifts';
+            const r = await fetchExpo(url, method, payload);
+            if (r && r.success) {
+                notify(id ? 'Đã cập nhật quà tặng!' : 'Đã thêm quà tặng mới!');
+                closeGiftModal();
+                loadExpoGifts();
+            }
+        });
+
         async function saveVoucher(e) {
             e.preventDefault();
             const id = document.getElementById('voucherId').value;
@@ -1401,7 +1685,8 @@
                 closeModal('voucherOverlay');
                 loadExpoVouchers();
             } else if (r && !r.success) {
-                alert(r.message || 'Lỗi khi lưu voucher');
+                closeModal('voucherOverlay');
+                Swal.fire('Lỗi hệ thống', r.message || 'Lỗi khi lưu voucher', 'error');
             }
         }
 
