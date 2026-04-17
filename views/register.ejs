@@ -98,7 +98,9 @@
     .voucher-section { margin-top: 24px; padding-top: 20px; border-top: 1px dashed #e2e8f0; }
     .voucher-title { font-size: 1rem; font-weight: 700; color: #1e40af; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .voucher-title i { font-style: normal; }
+    .voucher-title i { font-style: normal; }
     .hidden { display: none !important; }
+    .product-card { margin-bottom: 32px; border: 2px solid #e2e8f0; }
     @media (max-width: 1024px) { .hero { grid-template-columns: 1fr; } .content-grid { grid-template-columns: 1fr; } .grid-2 { grid-template-columns: 1fr; } .summary-grid { grid-template-columns: 1fr; } .steps { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -284,12 +286,15 @@
     const productServicesContainer = document.getElementById('productServicesContainer');
     const addProductServiceButton = document.getElementById('addProductServiceButton');
     let currentStep = 1;
-    let productServiceCount = 0;
+    let nextProductIndex = 0;
 
     function createProductServiceCard(index) {
       return `
         <div class="card product-card" data-index="${index}">
-          <div class="section-title" style="margin-bottom: 16px;">Sản phẩm ${index + 1}</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div class="section-title" style="margin: 0; padding: 0;">Sản phẩm ${index + 1}</div>
+            <button type="button" class="removeProductServiceButton" style="background: none; border: none; font-size: 1.5rem; color: #dc2626; cursor: pointer; padding: 0 10px;" title="Xóa toàn bộ thông tin sản phẩm này">×</button>
+          </div>
           <div class="grid-2">
             <div class="field">
               <label for="productName_${index}">Tên sản phẩm</label>
@@ -390,29 +395,34 @@
     }
 
     function renderProductServices() {
-      if (productServiceCount === 0) {
-        productServiceCount = 1;
-      }
-      productServicesContainer.innerHTML = Array.from({ length: productServiceCount }, (_, index) => createProductServiceCard(index)).join('');
-      bindProductServiceButtons();
-    }
-
-    function bindProductServiceButtons() {
-      productServicesContainer.querySelectorAll('.removeProductServiceButton').forEach((button) => {
-        button.removeEventListener('click', onRemoveProductService);
-        button.addEventListener('click', onRemoveProductService);
-      });
+      // Chỉ dùng khi khởi tạo lần đầu
+      productServicesContainer.innerHTML = '';
+      nextProductIndex = 0;
+      addProductService();
     }
 
     function onRemoveProductService(event) {
-      if (productServiceCount <= 1) return;
-      productServiceCount -= 1;
-      renderProductServices();
+      const cards = productServicesContainer.querySelectorAll('.product-card');
+      if (cards.length <= 1) {
+        showMessage('error', 'Cần ít nhất một sản phẩm!');
+        return;
+      }
+      const card = event.target.closest('.product-card');
+      if (card) card.remove();
     }
 
     function addProductService() {
-      productServiceCount += 1;
-      renderProductServices();
+      const html = createProductServiceCard(nextProductIndex);
+      productServicesContainer.insertAdjacentHTML('beforeend', html);
+      
+      // Bind action cho nút X vừa mới add
+      const newCard = productServicesContainer.lastElementChild;
+      const removeBtn = newCard.querySelector('.removeProductServiceButton');
+      if (removeBtn) {
+        removeBtn.addEventListener('click', onRemoveProductService);
+      }
+      
+      nextProductIndex += 1;
     }
 
     function setActiveStep(step) {
@@ -606,7 +616,6 @@
         }
         showSuccessPopup(result.message || 'Đăng ký thành công.');
         form.reset();
-        productServiceCount = 1;
         renderProductServices();
         setActiveStep(1);
       } catch (error) {
