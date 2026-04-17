@@ -939,7 +939,11 @@
                     <div class="product-info">
                         <div class="product-brand">${product.businessOwnerId?.businessName || 'Nhãn hàng chưa xác định'}</div>
                         <div class="product-name">${product.name}</div>
-                        <div class="product-desc">${product.description?.general || 'Không có mô tả'}</div>
+                        <div class="product-desc">
+                            ${(product.description?.general || 'Không có mô tả').length > 100 
+                                ? (product.description.general.substring(0, 100) + '...') 
+                                : (product.description?.general || 'Không có mô tả')}
+                        </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                             <div class="product-price">${price.toLocaleString('vi-VN')} ₫</div>
                             <div style="font-size: 0.85rem; color: ${isOutOfStock ? '#ef4444' : '#22c55e'}; font-weight: 700; background: ${isOutOfStock ? '#fef2f2' : '#f0fdf4'}; padding: 3px 10px; border-radius: 99px;">
