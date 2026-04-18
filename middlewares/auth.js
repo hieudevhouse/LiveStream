@@ -9,8 +9,8 @@ const authAdmin = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key');
-    if (decoded.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Not authorized as admin' });
+    if (decoded.role !== 'admin' && decoded.role !== 'operator') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
     }
     req.user = decoded;
     next();
@@ -19,4 +19,12 @@ const authAdmin = (req, res, next) => {
   }
 };
 
-module.exports = { authAdmin };
+const onlyAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    return res.status(403).json({ success: false, message: 'Quyền truy cập bị từ chối. Chỉ dành cho Admin.' });
+  }
+};
+
+module.exports = { authAdmin, onlyAdmin };

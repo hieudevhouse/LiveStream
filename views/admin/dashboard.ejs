@@ -614,9 +614,9 @@
         <ul class="sidebar-menu">
             <li class="menu-item"><a class="menu-link active" data-target="overview">🏛️ Sảnh Điều hành</a></li>
             <li class="menu-item"><a class="menu-link" data-target="orders">💳 Giao dịch Hội chợ</a></li>
-            <li class="menu-item"><a class="menu-link" data-target="products">🧺 Danh mục Gian hàng</a></li>
-            <li class="menu-item"><a class="menu-link" data-target="vouchers">🧧 Mã Ưu đãi Đặc biệt</a></li>
-            <li class="menu-item"><a class="menu-link" data-target="gifts">🎁 Quản lý Quà tặng</a></li>
+            <li class="menu-item" id="menu-products"><a class="menu-link" data-target="products">🧺 Danh mục Gian hàng</a></li>
+            <li class="menu-item" id="menu-vouchers"><a class="menu-link" data-target="vouchers">🧧 Mã Ưu đãi Đặc biệt</a></li>
+            <li class="menu-item" id="menu-gifts"><a class="menu-link" data-target="gifts">🎁 Quản lý Quà tặng</a></li>
         </ul>
 
         <div class="sidebar-footer">
@@ -1212,6 +1212,15 @@
             document.getElementById('adminName').innerText = user.email.split('@')[0];
             document.getElementById('adminMailLabel').innerText = user.email;
             document.getElementById('avatarLetter').innerText = user.email[0].toUpperCase();
+            
+            // Limit menu for operator
+            if (user.role === 'operator') {
+                const restrictedMenus = ['menu-products', 'menu-vouchers', 'menu-gifts'];
+                restrictedMenus.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
+            }
         }
 
         const menuLinks = document.querySelectorAll('.menu-link');
