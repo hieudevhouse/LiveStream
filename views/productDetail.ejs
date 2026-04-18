@@ -602,11 +602,11 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Số Điện Thoại *</label>
-                        <input type="tel" id="customerPhone" class="form-control" required placeholder="SĐT nhận hàng">
+                        <input type="text" id="customerPhone" class="form-control" required placeholder="SĐT nhận hàng">
                     </div>
                     <div class="form-group">
                         <label>Email *</label>
-                        <input type="email" id="customerEmail" class="form-control" required
+                        <input type="text" id="customerEmail" class="form-control" required
                             placeholder="Địa chỉ email cá nhân">
                     </div>
                 </div>
@@ -1443,7 +1443,7 @@
             </div>
             
             <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <input type="tel" id="trackingPhone" placeholder="SĐT bạn dùng để đặt hàng..." style="flex:1; padding:16px; border:2px solid #e2e8f0; border-radius:16px; font-size:1.1rem; outline:none; transition:border-color 0.3s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">
+                <input type="text" id="trackingPhone" placeholder="SĐT bạn dùng để đặt hàng..." style="flex:1; padding:16px; border:2px solid #e2e8f0; border-radius:16px; font-size:1.1rem; outline:none; transition:border-color 0.3s;" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'">
                 <button onclick="fetchOrdersByPhone()" style="background:var(--secondary); color:white; border:none; padding:16px 24px; border-radius:16px; font-weight:700; cursor:pointer; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Tra cứu</button>
             </div>
             

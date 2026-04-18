@@ -11,8 +11,7 @@ const orderSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Email là bắt buộc'],
     trim: true,
-    lowercase: true,
-    match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Email không hợp lệ']
+    lowercase: true
   },
 
   customerPhone: {

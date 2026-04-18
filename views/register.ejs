@@ -745,7 +745,7 @@
               </div>
               <div class="field email-wrapper">
                 <label for="email">Email liên hệ</label>
-                <input id="email" name="businessInfo[email]" type="email" placeholder="Email chính" required />
+                <input id="email" name="businessInfo[email]" type="text" placeholder="Email chính" required />
                 <div id="emailStatus" class="email-status" style="display:none;"></div>
               </div>
             </div>
@@ -768,7 +768,7 @@
             </div>
             <div class="field">
               <label for="contactEmail">Email người liên hệ</label>
-              <input id="contactEmail" name="businessInfo[contactRepresentative][email]" type="email"
+              <input id="contactEmail" name="businessInfo[contactRepresentative][email]" type="text"
                 placeholder="Email liên hệ" required />
             </div>
           </section>
@@ -1168,46 +1168,15 @@
       const contactPhone = document.getElementById('contactPhone').value.trim();
       const contactEmail = document.getElementById('contactEmail').value.trim();
 
-      const phoneRegex = /^(0|\+84)[0-9]{8,9}$/;
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const taxCodeRegex = /^[a-zA-Z0-9\-]{9,14}$/;
-
       if (!ownershipType) errors.push('Loại hình sở hữu');
       if (!businessName) errors.push('Tên nhãn hàng');
-
-      if (!taxCode) {
-        errors.push('Mã số thuế / CMND');
-      } else if (!taxCodeRegex.test(taxCode)) {
-        errors.push('Mã số thuế / CMND không đúng định dạng (9-14 số/ký tự)');
-      }
-
+      if (!taxCode) errors.push('Mã số thuế / CMND');
       if (!address) errors.push('Địa chỉ');
-
-      if (!phone) {
-        errors.push('Số điện thoại nhãn hàng');
-      } else if (!phoneRegex.test(phone)) {
-        errors.push('Số điện thoại nhãn hàng không đúng định dạng (10 số)');
-      }
-
-      if (!email) {
-        errors.push('Email liên hệ (chính)');
-      } else if (!emailRegex.test(email)) {
-        errors.push('Email liên hệ (chính) không đúng định dạng');
-      }
-
+      if (!phone) errors.push('Số điện thoại nhãn hàng');
+      if (!email) errors.push('Email liên hệ (chính)');
       if (!contactName) errors.push('Tên người liên hệ');
-
-      if (!contactPhone) {
-        errors.push('Điện thoại người liên hệ');
-      } else if (!phoneRegex.test(contactPhone)) {
-        errors.push('Điện thoại người liên hệ không đúng định dạng (10 số)');
-      }
-
-      if (!contactEmail) {
-        errors.push('Email người liên hệ');
-      } else if (!emailRegex.test(contactEmail)) {
-        errors.push('Email người liên hệ không đúng định dạng');
-      }
+      if (!contactPhone) errors.push('Điện thoại người liên hệ');
+      if (!contactEmail) errors.push('Email người liên hệ');
 
       if (errors.length > 0) {
         showMessage('error', '❌ Bước 1 - Thông tin chưa hợp lệ, vui lòng kiểm tra lại:\n• ' + errors.join('\n• '));
