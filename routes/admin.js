@@ -12,7 +12,7 @@ const Gift = require('../models/Gift');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const { authAdmin } = require('../middlewares/auth');
+const { authAdmin, onlyAdmin } = require('../middlewares/auth');
 
 // Cloudinary config
 cloudinary.config({
@@ -46,7 +46,7 @@ router.get('/', (req, res) => {
 router.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ email, role: 'admin' });
+        const user = await User.findOne({ email, role: { $in: ['admin', 'operator'] } });
         
         if (!user) {
             return res.status(401).json({ success: false, message: 'Sai email hoặc không có quyền Admin' });
@@ -95,7 +95,7 @@ router.get('/api/dashboard-stats', authAdmin, async (req, res) => {
 });
 
 // --- Vouchers API ---
-router.get('/api/vouchers', authAdmin, async (req, res) => {
+router.get('/api/vouchers', authAdmin, onlyAdmin, async (req, res) => {
     try {
         const vouchers = await Voucher.find().sort({ createdAt: -1 });
         res.json({ success: true, data: vouchers });
@@ -104,7 +104,7 @@ router.get('/api/vouchers', authAdmin, async (req, res) => {
     }
 });
 
-router.post('/api/vouchers', authAdmin, async (req, res) => {
+router.post('/api/vouchers', authAdmin, onlyAdmin, async (req, res) => {
     try {
         const newVoucher = await Voucher.create(req.body);
         res.status(201).json({ success: true, data: newVoucher });
@@ -132,7 +132,7 @@ router.delete('/api/vouchers/:id', authAdmin, async (req, res) => {
 });
 
 // --- Products API ---
-router.get('/api/products', authAdmin, async (req, res) => {
+router.get('/api/products', authAdmin, onlyAdmin, async (req, res) => {
     try {
         const products = await ProductService.find().populate('businessOwnerId', 'businessName').sort({ createdAt: -1 });
         res.json({ success: true, data: products });
@@ -141,7 +141,7 @@ router.get('/api/products', authAdmin, async (req, res) => {
     }
 });
 
-router.post('/api/products', authAdmin, async (req, res) => {
+router.post('/api/products', authAdmin, onlyAdmin, async (req, res) => {
     try {
         const newProduct = await ProductService.create(req.body);
         res.status(201).json({ success: true, data: newProduct });
@@ -225,7 +225,7 @@ router.post('/api/upload', authAdmin, upload.single('file'), (req, res) => {
 });
 
 // --- Gifts API ---
-router.get('/api/gifts', authAdmin, async (req, res) => {
+router.get('/api/gifts', authAdmin, onlyAdmin, async (req, res) => {
     try {
         const gifts = await Gift.find().sort({ createdAt: -1 });
         res.json({ success: true, data: gifts });
@@ -234,7 +234,7 @@ router.get('/api/gifts', authAdmin, async (req, res) => {
     }
 });
 
-router.post('/api/gifts', authAdmin, async (req, res) => {
+router.post('/api/gifts', authAdmin, onlyAdmin, async (req, res) => {
     try {
         if (req.body.codes && typeof req.body.codes === 'string') {
             req.body.codes = req.body.codes.split(',').map(c => c.trim().toUpperCase());
