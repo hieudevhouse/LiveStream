@@ -39,21 +39,21 @@ class OrderController {
       let product = null;
       let gift = null;
       let price = 0;
-      
+      console.log(isGift);
       if (isGift) {
         const Gift = require('../models/Gift');
         gift = await Gift.findById(giftId);
         if (!gift) return res.status(404).json({ success: false, message: 'Quà tặng không tìm thấy' });
-        
+
         const existingGiftOrder = await Order.findOne({ customerPhone, isGift: true, status: { $ne: 'cancelled' } });
         if (existingGiftOrder) return res.status(400).json({ success: false, message: `Số điện thoại ${customerPhone} đã nhận quà trước đó. Mỗi số điện thoại chỉ được nhận 1 lần.` });
-        
+
         if (gift.stock < quantityNumber) return res.status(400).json({ success: false, message: 'Quà tặng đã hết hàng.' });
         price = 0;
       } else {
         product = await ProductService.findById(productId).populate('businessOwnerId');
         if (!product) return res.status(404).json({ success: false, message: 'Sản phẩm/dịch vụ không tìm thấy' });
-        
+
         if (product.pricing?.stock != null && product.pricing.stock < quantityNumber) {
           return res.status(400).json({ success: false, message: `Sản phẩm này chỉ còn ${product.pricing.stock} đơn vị trong kho.` });
         }
@@ -89,7 +89,7 @@ class OrderController {
               validFrom: productVoucher.startDate,
               validUntil: productVoucher.expiryDate,
               minimumOrder: 0,
-              calculateDiscount: function(total) { return Math.min(this.discountValue, total); }
+              calculateDiscount: function (total) { return Math.min(this.discountValue, total); }
             };
             isProductSpecific = true;
           }
@@ -166,7 +166,7 @@ class OrderController {
         } else if (voucher._id) {
           // Increment usage count for global voucher
           await Voucher.findByIdAndUpdate(voucher._id, { $inc: { usageCount: 1 } });
-          
+
           // Also try to update embedded vouchers in products that might have this code
           await ProductService.updateMany(
             { 'vouchers.code': normalizedCode },
@@ -531,7 +531,7 @@ class OrderController {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     // 1. Hourly Revenue for Today
     const hourlyRevenue = await Order.aggregate([
       { $match: { createdAt: { $gte: today, $lt: tomorrow }, status: { $ne: 'cancelled' } } },
