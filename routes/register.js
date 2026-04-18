@@ -9,7 +9,10 @@ const { storage } = require('../config/cloudinary');
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 200 * 1024 * 1024 } // Tang len 200MB cho Cloudinary
+  limits: {
+    fileSize: 200 * 1024 * 1024, // 200MB
+    fields: 1000 // Tăng từ 100 lên 1000 để hỗ trợ add nhiều sản phẩm
+  }
 });
 
 

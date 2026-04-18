@@ -11,7 +11,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'tvad-uploads',
-    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'pdf'],
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'pdf', 'heic', 'heif'],
     public_id: (req, file) => {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
       return file.fieldname + '-' + uniqueSuffix;
