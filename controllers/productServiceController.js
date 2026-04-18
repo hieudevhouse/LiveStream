@@ -6,6 +6,7 @@ const getByBusinessOwner = async (req, res) => {
     res.json(productsServices);
   } catch (error) {
     res.status(error.status || 500).json({ message: error.message });
+    console.log(error);
   }
 };
 
